@@ -304,8 +304,8 @@ export function WorkoutLogger() {
                 </div>
             </div>
 
-            {/* Template Picker - collapsible, open by default when empty */}
-            <TemplatePicker onSelectTemplate={handleTemplateSelect} defaultOpen={workoutExercises.length === 0} />
+            {/* Template Picker - collapsible, always starts closed */}
+            <TemplatePicker onSelectTemplate={handleTemplateSelect} defaultOpen={false} />
 
             {/* Exercise Logger List */}
             <div className="space-y-6">
