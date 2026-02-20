@@ -14,6 +14,83 @@ export type Quest = {
     progress: number
     total: number
     type: 'daily' | 'weekly' | 'raid'
+    reward?: number
+    completed?: boolean
+}
+
+// --- Rotating Quest Pool ---
+
+type QuestCondition =
+    | 'daily_workout_count'
+    | 'daily_volume'
+    | 'daily_sets'
+    | 'daily_category_legs'
+    | 'daily_category_chest'
+    | 'daily_category_back'
+    | 'daily_category_shoulders'
+    | 'weekly_workout_count'
+    | 'weekly_volume'
+    | 'weekly_pr_count'
+    | 'weekly_weekend_workout'
+    | 'weekly_categories'
+
+interface QuestTemplate {
+    id: string
+    title: string
+    description: string
+    type: 'daily' | 'weekly'
+    condition: QuestCondition
+    total: number
+    reward: number
+}
+
+const DAILY_QUEST_POOL: QuestTemplate[] = [
+    { id: 'd-log-workout', title: 'Daily Grind', description: 'Log a workout today to maintain your streak.', type: 'daily', condition: 'daily_workout_count', total: 1, reward: 25 },
+    { id: 'd-volume-3k', title: 'Heavy Hitter', description: 'Lift 3,000 lbs in a single day.', type: 'daily', condition: 'daily_volume', total: 3000, reward: 35 },
+    { id: 'd-volume-5k', title: 'Iron Pumper', description: 'Lift 5,000 lbs in a single day.', type: 'daily', condition: 'daily_volume', total: 5000, reward: 50 },
+    { id: 'd-sets-10', title: 'Set Stacker', description: 'Complete 10 sets today.', type: 'daily', condition: 'daily_sets', total: 10, reward: 30 },
+    { id: 'd-sets-15', title: 'Rep Machine', description: 'Complete 15 sets today. No slacking.', type: 'daily', condition: 'daily_sets', total: 15, reward: 45 },
+    { id: 'd-legs', title: 'Leg Day', description: 'Train legs today. No skipping.', type: 'daily', condition: 'daily_category_legs', total: 1, reward: 30 },
+    { id: 'd-chest', title: 'Chest Quest', description: 'Hit a chest exercise today.', type: 'daily', condition: 'daily_category_chest', total: 1, reward: 30 },
+    { id: 'd-back', title: 'Back Attack', description: 'Train your back today.', type: 'daily', condition: 'daily_category_back', total: 1, reward: 30 },
+    { id: 'd-shoulders', title: 'Boulder Shoulders', description: 'Train shoulders today.', type: 'daily', condition: 'daily_category_shoulders', total: 1, reward: 30 },
+]
+
+const WEEKLY_QUEST_POOL: QuestTemplate[] = [
+    { id: 'w-workouts-3', title: 'Consistent', description: 'Complete 3 workouts this week.', type: 'weekly', condition: 'weekly_workout_count', total: 3, reward: 75 },
+    { id: 'w-workouts-5', title: 'Weekly Warrior', description: 'Complete 5 workouts this week.', type: 'weekly', condition: 'weekly_workout_count', total: 5, reward: 125 },
+    { id: 'w-volume-15k', title: 'Iron Forge', description: 'Lift 15,000 lbs total this week.', type: 'weekly', condition: 'weekly_volume', total: 15000, reward: 100 },
+    { id: 'w-volume-25k', title: 'Steel Temperer', description: 'Lift 25,000 lbs total this week.', type: 'weekly', condition: 'weekly_volume', total: 25000, reward: 150 },
+    { id: 'w-prs-2', title: 'PR Hunter', description: 'Set 2 personal records this week.', type: 'weekly', condition: 'weekly_pr_count', total: 2, reward: 100 },
+    { id: 'w-prs-5', title: 'Record Breaker', description: 'Set 5 personal records this week. Push your limits.', type: 'weekly', condition: 'weekly_pr_count', total: 5, reward: 150 },
+    { id: 'w-weekend', title: 'Weekend Warrior', description: 'Log a workout on Saturday or Sunday.', type: 'weekly', condition: 'weekly_weekend_workout', total: 1, reward: 75 },
+]
+
+/** Simple deterministic hash to pick quests from pool */
+function seedHash(str: string): number {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i)
+        hash = ((hash << 5) - hash) + char
+        hash |= 0 // Convert to 32bit integer
+    }
+    return Math.abs(hash)
+}
+
+/** Pick N unique items from a pool using a seeded index */
+function pickFromPool<T>(pool: T[], count: number, seed: number): T[] {
+    const picked: T[] = []
+    const indices = new Set<number>()
+    let attempt = seed
+    while (picked.length < count && picked.length < pool.length) {
+        const idx = attempt % pool.length
+        if (!indices.has(idx)) {
+            indices.add(idx)
+            picked.push(pool[idx])
+        }
+        attempt = seedHash(attempt.toString() + 'x')
+    }
+    return picked
 }
 
 export async function fetchRecentActivity(userId: string): Promise<WorkoutActivity[]> {
@@ -60,83 +137,101 @@ export async function fetchFullWorkoutHistory(userId: string) {
 export async function fetchActiveQuests(userId: string): Promise<Quest[]> {
     const supabase = createClient()
     const quests: Quest[] = []
-
-    // Weekly Warrior: Complete 4 workouts this week
     const now = new Date()
+
+    // --- Time boundaries ---
     const dayOfWeek = now.getDay()
     const startOfWeek = new Date(now)
     startOfWeek.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
     startOfWeek.setHours(0, 0, 0, 0)
 
-    const { count: weeklyCount } = await supabase
-        .from('workouts')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .gte('start_time', startOfWeek.toISOString())
-
-    quests.push({
-        id: 'weekly-warrior',
-        title: 'Weekly Warrior',
-        description: 'Complete 4 workouts this week to earn the Warrior title.',
-        progress: Math.min(weeklyCount || 0, 4),
-        total: 4,
-        type: 'weekly'
-    })
-
-    // Daily Quest: Log at least 1 workout today
     const startOfDay = new Date(now)
     startOfDay.setHours(0, 0, 0, 0)
 
-    const { count: dailyCount } = await supabase
-        .from('workouts')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .gte('start_time', startOfDay.toISOString())
+    // --- Seeded quest selection ---
+    const dateStr = now.toISOString().split('T')[0] // YYYY-MM-DD
+    const weekStr = `${now.getFullYear()}-W${Math.ceil(((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 + 1) / 7)}`
 
-    quests.push({
-        id: 'daily-grind',
-        title: 'Daily Grind',
-        description: 'Log a workout today to maintain your streak.',
-        progress: Math.min(dailyCount || 0, 1),
-        total: 1,
-        type: 'daily'
-    })
+    const dailySeed = seedHash(userId + dateStr)
+    const weeklySeed = seedHash(userId + weekStr)
 
-    // Volume Quest: Lift 10,000 lbs this week
-    const { data: weekSets } = await supabase
-        .from('workouts')
-        .select('total_volume')
-        .eq('user_id', userId)
-        .gte('start_time', startOfWeek.toISOString())
+    const selectedDailies = pickFromPool(DAILY_QUEST_POOL, 2, dailySeed)
+    const selectedWeeklies = pickFromPool(WEEKLY_QUEST_POOL, 2, weeklySeed)
 
-    const weeklyVolume = (weekSets || []).reduce((sum, w) => sum + (w.total_volume || 0), 0)
-    quests.push({
-        id: 'volume-quest',
-        title: 'Iron Forge',
-        description: 'Lift 10,000 lbs total this week to temper your blade.',
-        progress: Math.min(weeklyVolume, 10000),
-        total: 10000,
-        type: 'weekly'
-    })
+    // --- Fetch all data we might need (parallel) ---
+    const [
+        { count: dailyWorkoutCount },
+        { count: weeklyWorkoutCount },
+        { data: dailyWorkouts },
+        { data: weeklyWorkouts },
+        { count: dailySetCount },
+        { count: weeklyPRCount },
+        { data: dailySetsWithCategory },
+        { count: weekendWorkoutCount },
+    ] = await Promise.all([
+        supabase.from('workouts').select('*', { count: 'exact', head: true })
+            .eq('user_id', userId).gte('start_time', startOfDay.toISOString()),
+        supabase.from('workouts').select('*', { count: 'exact', head: true })
+            .eq('user_id', userId).gte('start_time', startOfWeek.toISOString()),
+        supabase.from('workouts').select('total_volume')
+            .eq('user_id', userId).gte('start_time', startOfDay.toISOString()),
+        supabase.from('workouts').select('total_volume')
+            .eq('user_id', userId).gte('start_time', startOfWeek.toISOString()),
+        supabase.from('workout_sets').select('*, workouts!inner(user_id, start_time)', { count: 'exact', head: true })
+            .eq('workouts.user_id', userId).gte('workouts.start_time', startOfDay.toISOString()),
+        supabase.from('workout_sets').select('*, workouts!inner(user_id, start_time)', { count: 'exact', head: true })
+            .eq('workouts.user_id', userId).eq('is_pr', true).gte('workouts.start_time', startOfWeek.toISOString()),
+        supabase.from('workout_sets').select('exercise_id, exercises!inner(category), workouts!inner(user_id, start_time)')
+            .eq('workouts.user_id', userId).gte('workouts.start_time', startOfDay.toISOString()),
+        // Weekend workouts: Sat (6) and Sun (0) this week
+        supabase.from('workouts').select('start_time', { count: 'exact', head: true })
+            .eq('user_id', userId).gte('start_time', startOfWeek.toISOString())
+            // We'll filter weekend client-side below
+    ])
 
-    // PR Hunter: Set 3 personal records this week
-    const { count: weeklyPRCount } = await supabase
-        .from('workout_sets')
-        .select('*, workouts!inner(user_id, start_time)', { count: 'exact', head: true })
-        .eq('workouts.user_id', userId)
-        .eq('is_pr', true)
-        .gte('workouts.start_time', startOfWeek.toISOString())
+    const dailyVolume = (dailyWorkouts || []).reduce((sum, w) => sum + (w.total_volume || 0), 0)
+    const weeklyVolume = (weeklyWorkouts || []).reduce((sum, w) => sum + (w.total_volume || 0), 0)
 
-    quests.push({
-        id: 'pr-hunter',
-        title: 'PR Hunter',
-        description: 'Set 3 personal records this week. Push your limits.',
-        progress: Math.min(weeklyPRCount || 0, 3),
-        total: 3,
-        type: 'weekly'
-    })
+    // Check which categories were trained today
+    const todayCategories = new Set<string>()
+    for (const s of (dailySetsWithCategory || [])) {
+        const cat = (s as any).exercises?.category
+        if (cat) todayCategories.add(cat.toLowerCase())
+    }
 
-    // Raid Quest: Check if user has an active raid
+    // Build condition values map
+    const conditionValues: Record<QuestCondition, number> = {
+        daily_workout_count: dailyWorkoutCount || 0,
+        daily_volume: dailyVolume,
+        daily_sets: dailySetCount || 0,
+        daily_category_legs: todayCategories.has('legs') ? 1 : 0,
+        daily_category_chest: todayCategories.has('chest') ? 1 : 0,
+        daily_category_back: todayCategories.has('back') ? 1 : 0,
+        daily_category_shoulders: todayCategories.has('shoulders') ? 1 : 0,
+        weekly_workout_count: weeklyWorkoutCount || 0,
+        weekly_volume: weeklyVolume,
+        weekly_pr_count: weeklyPRCount || 0,
+        weekly_weekend_workout: weekendWorkoutCount || 0,
+        weekly_categories: 0, // unused for now
+    }
+
+    // --- Build quest objects from selected templates ---
+    const allSelected = [...selectedDailies, ...selectedWeeklies]
+    for (const template of allSelected) {
+        const progress = Math.min(conditionValues[template.condition] || 0, template.total)
+        quests.push({
+            id: template.id,
+            title: template.title,
+            description: template.description,
+            progress,
+            total: template.total,
+            type: template.type,
+            reward: template.reward,
+            completed: progress >= template.total,
+        })
+    }
+
+    // --- Raid Quest (always shown if active) ---
     const { data: memberData } = await supabase
         .from('party_members')
         .select('party_id')
