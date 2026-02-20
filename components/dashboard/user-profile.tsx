@@ -1,5 +1,5 @@
 "use client"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,9 +7,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Sword } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { createClient } from "@/lib/supabase/client"
+import { getXPForNextLevel } from "@/lib/xp-engine"
+import { ClassSelectionModal } from "@/components/dashboard/class-selection-modal"
+import { updateUserClass } from "@/lib/supabase/data-hooks"
 
 export function UserProfile() {
-    const { user, isLoading, fetchProfile } = useUserStore()
+    const { user, isLoading, fetchProfile, refreshProfile } = useUserStore()
+    const [showClassModal, setShowClassModal] = useState(false)
 
     useEffect(() => {
         const initProfile = async () => {
@@ -21,6 +25,22 @@ export function UserProfile() {
         }
         initProfile()
     }, [fetchProfile])
+
+    // Show class selection modal when user reaches level 6+ without a class
+    useEffect(() => {
+        if (user && (user.level || 1) >= 6 && !user.class_name) {
+            setShowClassModal(true)
+        }
+    }, [user])
+
+    const handleClassSelect = async (className: string) => {
+        if (!user) return
+        const success = await updateUserClass(user.id, className)
+        if (success) {
+            await refreshProfile()
+            setShowClassModal(false)
+        }
+    }
 
     if (isLoading || !user) {
         return (
@@ -37,9 +57,15 @@ export function UserProfile() {
 
     const level = user.level || 1
     const currentXP = user.xp_current || 0
-    const xpForNextLevel = level * 1000 // Simplified formula vs the true xp-engine
-    const progressPercent = Math.min((currentXP / xpForNextLevel) * 100, 100)
+    const xpNeeded = getXPForNextLevel(level)
+    // Calculate XP progress within the current level bracket
+    // xp_current is cumulative, so we need to find how much is within this level
+    const xpForCurrentLevel = getXPForNextLevel(level - 1 > 0 ? level - 1 : 1)
+    const xpIntoCurrentLevel = currentXP % xpNeeded
+    const progressPercent = Math.min((xpIntoCurrentLevel / xpNeeded) * 100, 100)
     return (
+        <>
+        <ClassSelectionModal isOpen={showClassModal} onSelectClass={handleClassSelect} />
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -55,7 +81,7 @@ export function UserProfile() {
                         <div className="relative group cursor-pointer">
                             <div className="absolute inset-0 bg-indigo-500 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity" />
                             <Avatar className="h-24 w-24 border-2 border-indigo-500/50 relative">
-                                <AvatarImage src="https://github.com/shadcn.png" />
+                                <AvatarImage src={user.avatar_url || undefined} />
                                 <AvatarFallback>{user.display_name.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="absolute -bottom-2 right-0 left-0 mx-auto w-fit bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full border border-indigo-500/50 shadow-lg">
@@ -76,7 +102,7 @@ export function UserProfile() {
                     <div>
                         <div className="flex justify-between text-sm mb-2 font-medium">
                             <span className="text-slate-400 uppercase tracking-wider text-[10px]">Experience</span>
-                            <span className="text-indigo-300 text-xs">{currentXP} / {xpForNextLevel} XP</span>
+                            <span className="text-indigo-300 text-xs">{xpIntoCurrentLevel} / {xpNeeded} XP</span>
                         </div>
                         <div className="relative h-2.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
                             <motion.div
@@ -87,7 +113,7 @@ export function UserProfile() {
                             />
                         </div>
                         <p className="text-[10px] text-slate-500 mt-2 text-right uppercase tracking-wider font-semibold">
-                            {xpForNextLevel - currentXP} XP to Level {level + 1}
+                            {xpNeeded - xpIntoCurrentLevel} XP to Level {level + 1}
                         </p>
                     </div>
 
@@ -129,5 +155,6 @@ export function UserProfile() {
                 </CardContent>
             </Card>
         </motion.div>
+        </>
     )
 }

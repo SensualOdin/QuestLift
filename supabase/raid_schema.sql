@@ -1,4 +1,4 @@
--- QuestFit Phase 3: Raids Schema
+-- QuestLift Phase 3: Raids Schema
 
 -- Active and Past Raids
 create table public.raids (
@@ -28,6 +28,21 @@ alter table public.raid_damage enable row level security;
 
 -- Policies
 create policy "Users can view raids for their party" on raids for select using (
+  exists (select 1 from party_members pm where pm.party_id = raids.party_id and pm.user_id = auth.uid())
+);
+
+-- Raid damage: Users can insert damage for raids they belong to
+create policy "Users can record raid damage" on raid_damage for insert with check (
+  auth.uid() = user_id and
+  exists (
+    select 1 from raids r
+    join party_members pm on r.party_id = pm.party_id
+    where r.id = raid_damage.raid_id and pm.user_id = auth.uid()
+  )
+);
+
+-- Raids: Party leaders can update raid status (e.g. defeated)
+create policy "Users can update raids for their party" on raids for update using (
   exists (select 1 from party_members pm where pm.party_id = raids.party_id and pm.user_id = auth.uid())
 );
 

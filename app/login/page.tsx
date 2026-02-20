@@ -11,9 +11,11 @@ export default function LoginPage() {
     const supabase = createClient()
     const router = useRouter()
     const [isClient, setIsClient] = useState(false)
+    const [origin, setOrigin] = useState('')
 
     useEffect(() => {
         setIsClient(true)
+        setOrigin(window.location.origin)
 
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession()
@@ -55,7 +57,7 @@ export default function LoginPage() {
                         <div className="absolute inset-0 bg-indigo-500/20 animate-pulse" />
                         <Sword className="w-8 h-8 text-indigo-400 relative z-10" />
                     </div>
-                    <h1 className="text-2xl font-black text-white tracking-tight">QuestFit</h1>
+                    <h1 className="text-2xl font-black text-white tracking-tight">QuestLift</h1>
                     <p className="text-slate-400 text-sm mt-1 text-center">Your Adventure Awaits</p>
                 </div>
 
@@ -84,7 +86,7 @@ export default function LoginPage() {
                     }}
                     theme="dark"
                     providers={['google']}
-                    redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`}
+                    redirectTo={`${origin}/auth/callback`}
                 />
             </motion.div>
         </div>

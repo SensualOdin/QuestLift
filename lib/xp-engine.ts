@@ -117,10 +117,10 @@ export function calculateLevelFromXP(totalXP: number): number {
 
     for (const bracket of levels) {
         if (totalXP >= bracket.startXp) {
-            if (bracket.endLvl === 50 && totalXP >= bracket.startXp + (20 * 15000)) {
+            if (bracket.endLvl === 50 && totalXP >= bracket.startXp + (20 * bracket.xpPerLevel)) {
                 // Above 50, standard 50,000 XP per level
-                const xpOver50 = totalXP - (bracket.startXp + (19 * 15000))
-                return 50 + Math.floor(xpOver50 / 50000)
+                const xpOver50 = totalXP - (bracket.startXp + (20 * bracket.xpPerLevel))
+                return 51 + Math.floor(xpOver50 / 50000)
             }
 
             const xpInBracket = totalXP - bracket.startXp

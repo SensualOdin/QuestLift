@@ -1,4 +1,4 @@
--- QuestFit Phase 2: Party & Social System Schema
+-- QuestLift Phase 2: Party & Social System Schema
 
 -- Parties
 create table public.parties (
@@ -57,6 +57,15 @@ create policy "Users can view members of their parties" on party_members for sel
 create policy "Users can view roast reports for their parties" on roast_reports for select using (
   exists (select 1 from party_members pm where pm.party_id = party_id and pm.user_id = auth.uid())
 );
+
+-- Parties: Authenticated users can create parties
+create policy "Authenticated users can create parties" on parties for insert with check (true);
+
+-- Party Members: Users can join parties (insert themselves)
+create policy "Users can join parties" on party_members for insert with check (auth.uid() = user_id);
+
+-- Party Members: Users can leave parties (delete themselves)
+create policy "Users can leave parties" on party_members for delete using (auth.uid() = user_id);
 
 create policy "Users can hype PRs of their party members" on pr_hypes for insert with check (
   auth.uid() = from_user_id and

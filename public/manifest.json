@@ -1,6 +1,6 @@
 {
-    "name": "QuestFit RPG",
-    "short_name": "QuestFit",
+    "name": "QuestLift RPG",
+    "short_name": "QuestLift",
     "description": "The Gamified Fitness RPG",
     "start_url": "/",
     "display": "standalone",

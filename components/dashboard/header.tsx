@@ -110,7 +110,7 @@ export function Header() {
                                                 <Trophy className="w-4 h-4" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-slate-200">Welcome to QuestFit</p>
+                                                <p className="text-sm font-medium text-slate-200">Welcome to QuestLift</p>
                                                 <p className="text-xs text-slate-400 mt-1">Visit your workout logger to start gaining XP.</p>
                                                 <p className="text-[10px] text-slate-500 mt-2">Just now</p>
                                             </div>

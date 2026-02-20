@@ -1,4 +1,4 @@
--- QuestFit Supabase Schema
+-- QuestLift Supabase Schema
 
 -- Users table linking to Supabase Auth
 create table public.users (
@@ -61,6 +61,7 @@ alter table public.workout_sets enable row level security;
 
 -- Users: Users can read and update their own profile, can read others.
 create policy "Users can view all profiles" on users for select using (true);
+create policy "Users can insert own profile" on users for insert with check (auth.uid() = id);
 create policy "Users can update own profile" on users for update using (auth.uid() = id);
 
 -- Exercises: Read-only for all authenticated users

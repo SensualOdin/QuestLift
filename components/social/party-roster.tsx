@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Users, Link, Shield, Sword, Wind, Flame, UserPlus } from "lucide-react"
+import { Users, Link, Shield, Sword, Wind, Flame, UserPlus, Crown } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
-import { fetchUserParty } from "@/lib/supabase/data-hooks"
+import { fetchUserParty, joinPartyByCode } from "@/lib/supabase/data-hooks"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createClient } from "@/lib/supabase/client"
 
@@ -16,6 +16,11 @@ export function PartyRoster() {
     const [party, setParty] = useState<any>(null)
     const [roster, setRoster] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [joinCode, setJoinCode] = useState("")
+    const [joinError, setJoinError] = useState("")
+    const [isJoining, setIsJoining] = useState(false)
+    const [isCreating, setIsCreating] = useState(false)
+    const [createError, setCreateError] = useState("")
 
     const loadParty = async () => {
         if (!user) return
@@ -33,7 +38,7 @@ export function PartyRoster() {
 
     const handleCopyInvite = () => {
         if (party?.join_code) {
-            navigator.clipboard.writeText(`questfit.app/invite/${party.join_code}`)
+            navigator.clipboard.writeText(`questlift.app/invite/${party.join_code}`)
             setInviteCopied(true)
             setTimeout(() => setInviteCopied(false), 2000)
         }
@@ -41,23 +46,51 @@ export function PartyRoster() {
 
     const handleCreateParty = async () => {
         if (!user) return
+        setIsCreating(true)
+        setCreateError("")
 
         const supabase = createClient()
-        const joinCode = `p-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+        const partyId = crypto.randomUUID()
+        const code = `p-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
-        const { data: newParty, error: pError } = await supabase
+        const { error: pError } = await supabase
             .from('parties')
-            .insert({ name: 'New Adventure Party', join_code: joinCode })
-            .select()
-            .single()
+            .insert({ id: partyId, name: 'New Adventure Party', join_code: code })
 
-        if (newParty && !pError) {
-            await supabase.from('party_members').insert({
-                party_id: newParty.id,
-                user_id: user.id
-            })
-            await loadParty()
+        if (pError) {
+            console.error('Create party error:', pError)
+            setCreateError(pError.message || 'Failed to create party.')
+            setIsCreating(false)
+            return
         }
+
+        const { error: mError } = await supabase.from('party_members').insert({
+            party_id: partyId,
+            user_id: user.id,
+            role: 'leader'
+        })
+
+        if (mError) {
+            console.error('Join party error:', mError)
+            setCreateError(mError.message || 'Party created but failed to join.')
+        }
+
+        await loadParty()
+        setIsCreating(false)
+    }
+
+    const handleJoinParty = async () => {
+        if (!user || !joinCode.trim()) return
+        setIsJoining(true)
+        setJoinError("")
+
+        const result = await joinPartyByCode(user.id, joinCode)
+        if (result.success) {
+            await loadParty()
+        } else {
+            setJoinError(result.error || 'Failed to join party.')
+        }
+        setIsJoining(false)
     }
 
     const getIcon = (className: string) => {
@@ -87,12 +120,28 @@ export function PartyRoster() {
                 <p className="text-slate-400 text-sm mb-6">You must brave the dungeons alone, or form a party of adventurers.</p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Button onClick={handleCreateParty} className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto">
-                        <Users className="w-4 h-4 mr-2" /> Create Party
+                    <Button onClick={handleCreateParty} disabled={isCreating} className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto">
+                        <Users className="w-4 h-4 mr-2" /> {isCreating ? "Creating..." : "Create Party"}
                     </Button>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                        <Input placeholder="Enter Join Code" className="bg-slate-950 border-slate-800 text-center w-full" />
-                        <Button variant="secondary" className="bg-slate-800 text-white hover:bg-slate-700">Join</Button>
+                    <div className="flex flex-col gap-2 w-full sm:w-auto">
+                        <div className="flex gap-2">
+                            <Input
+                                placeholder="Enter Join Code"
+                                value={joinCode}
+                                onChange={(e) => setJoinCode(e.target.value)}
+                                className="bg-slate-950 border-slate-800 text-center w-full"
+                            />
+                            <Button
+                                variant="secondary"
+                                className="bg-slate-800 text-white hover:bg-slate-700"
+                                onClick={handleJoinParty}
+                                disabled={isJoining || !joinCode.trim()}
+                            >
+                                {isJoining ? "Joining..." : "Join"}
+                            </Button>
+                        </div>
+                        {joinError && <p className="text-xs text-red-400">{joinError}</p>}
+                        {createError && <p className="text-xs text-red-400">{createError}</p>}
                     </div>
                 </div>
             </Card>
@@ -117,6 +166,7 @@ export function PartyRoster() {
                         if (!mUser) return null
 
                         const Icon = getIcon(mUser.class_name)
+                        const isLeader = member.role === 'leader'
                         const name = user?.id === member.user_id ? `${mUser.display_name} (You)` : mUser.display_name
 
                         return (
@@ -133,7 +183,10 @@ export function PartyRoster() {
                                         </div>
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-slate-200">{name}</h4>
+                                        <h4 className="font-semibold text-slate-200 flex items-center gap-1.5">
+                                            {name}
+                                            {isLeader && <Crown className="w-3.5 h-3.5 text-yellow-500" />}
+                                        </h4>
                                         <p className={`text-xs font-medium flex items-center gap-1 text-slate-400`}>
                                             <Icon className="w-3 h-3" /> {mUser.class_name || 'Novice'}
                                         </p>
@@ -150,7 +203,7 @@ export function PartyRoster() {
                     <div className="flex items-center gap-2">
                         <Input
                             readOnly
-                            value={`questfit.app/invite/${party.join_code || 'ERROR'}`}
+                            value={`questlift.app/invite/${party.join_code || 'ERROR'}`}
                             className="bg-slate-950 border-slate-800 text-slate-400 font-mono text-sm"
                         />
                         <Button
