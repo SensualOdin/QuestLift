@@ -144,7 +144,7 @@ export function UserProfile() {
                                     src={charSrc}
                                     alt={tier}
                                     fill
-                                    className="object-cover"
+                                    className="object-contain"
                                     priority
                                 />
                             </div>
