@@ -55,11 +55,30 @@ export function WorkoutLogger() {
         setWorkoutStartTime(new Date())
     }, [])
 
+    // Request notification permission on mount
+    useEffect(() => {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission()
+        }
+    }, [])
+
     useEffect(() => {
         let interval: NodeJS.Timeout
         if (timerRunning && activeTimer > 0) {
             interval = setInterval(() => {
-                setActiveTimer((prev) => prev - 1)
+                setActiveTimer((prev) => {
+                    if (prev <= 1) {
+                        // Timer just hit zero — notify
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification('Rest Over', {
+                                body: 'Time to hit your next set!',
+                                icon: '/icon-192x192.png',
+                                tag: 'rest-timer',
+                            })
+                        }
+                    }
+                    return prev - 1
+                })
             }, 1000)
         } else if (activeTimer === 0) {
             setTimerRunning(false)
@@ -285,10 +304,8 @@ export function WorkoutLogger() {
                 </div>
             </div>
 
-            {/* Template Picker - show when no exercises added yet */}
-            {workoutExercises.length === 0 && (
-                <TemplatePicker onSelectTemplate={handleTemplateSelect} />
-            )}
+            {/* Template Picker - collapsible, open by default when empty */}
+            <TemplatePicker onSelectTemplate={handleTemplateSelect} defaultOpen={workoutExercises.length === 0} />
 
             {/* Exercise Logger List */}
             <div className="space-y-6">

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "The Gamified Fitness RPG",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "QuestLift",
   },
   manifest: "/manifest.json",

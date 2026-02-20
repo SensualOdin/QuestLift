@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Dumbbell, Activity, Zap, ChevronRight } from "lucide-react"
+import { Dumbbell, Activity, Zap, ChevronRight, ChevronDown, LayoutTemplate } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 interface Template {
@@ -15,6 +15,7 @@ interface Template {
 
 interface TemplatePickerProps {
     onSelectTemplate: (exerciseNames: string[]) => void
+    defaultOpen?: boolean
 }
 
 const CATEGORY_CONFIG: Record<string, { icon: typeof Dumbbell, color: string, bg: string }> = {
@@ -26,9 +27,10 @@ const CATEGORY_CONFIG: Record<string, { icon: typeof Dumbbell, color: string, bg
     'Cardio': { icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
 }
 
-export function TemplatePicker({ onSelectTemplate }: TemplatePickerProps) {
+export function TemplatePicker({ onSelectTemplate, defaultOpen = true }: TemplatePickerProps) {
     const [templates, setTemplates] = useState<Template[]>([])
     const [loading, setLoading] = useState(true)
+    const [isOpen, setIsOpen] = useState(defaultOpen)
 
     useEffect(() => {
         const loadTemplates = async () => {
@@ -72,37 +74,47 @@ export function TemplatePicker({ onSelectTemplate }: TemplatePickerProps) {
     if (loading || templates.length === 0) return null
 
     return (
-        <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Quick Start Templates</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {templates.map(template => {
-                    const config = CATEGORY_CONFIG[template.category || 'Full Body'] || CATEGORY_CONFIG['Full Body']
-                    const Icon = config.icon
+        <div className="space-y-2">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center gap-2 w-full text-left py-2 active:opacity-70 transition-opacity"
+            >
+                <LayoutTemplate className="w-4 h-4 text-slate-500" />
+                <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex-1">Templates</span>
+                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+            </button>
 
-                    return (
-                        <Card
-                            key={template.id}
-                            className="border-slate-800/60 bg-slate-900/40 hover:bg-slate-900/80 transition-colors cursor-pointer group"
-                            onClick={() => onSelectTemplate(template.exercises.map(e => e.name))}
-                        >
-                            <CardContent className="p-4 flex items-center gap-3">
-                                <div className={`p-2 rounded-lg ${config.bg} ${config.color} flex-shrink-0`}>
-                                    <Icon className="w-5 h-5" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-slate-200 text-sm group-hover:text-indigo-300 transition-colors">
-                                        {template.name}
-                                    </h4>
-                                    <p className="text-[10px] text-slate-500 truncate mt-0.5">
-                                        {template.exercises.map(e => e.name).join(' / ')}
-                                    </p>
-                                </div>
-                                <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-400 transition-colors flex-shrink-0" />
-                            </CardContent>
-                        </Card>
-                    )
-                })}
-            </div>
+            {isOpen && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                    {templates.map(template => {
+                        const config = CATEGORY_CONFIG[template.category || 'Full Body'] || CATEGORY_CONFIG['Full Body']
+                        const Icon = config.icon
+
+                        return (
+                            <Card
+                                key={template.id}
+                                className="border-slate-800/60 bg-slate-900/40 active:bg-slate-900/80 hover:bg-slate-900/80 transition-colors cursor-pointer group"
+                                onClick={() => onSelectTemplate(template.exercises.map(e => e.name))}
+                            >
+                                <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${config.bg} ${config.color} flex-shrink-0`}>
+                                        <Icon className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-semibold text-slate-200 text-sm group-hover:text-indigo-300 transition-colors">
+                                            {template.name}
+                                        </h4>
+                                        <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                                            {template.exercises.map(e => e.name).join(' / ')}
+                                        </p>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-400 transition-colors flex-shrink-0" />
+                                </CardContent>
+                            </Card>
+                        )
+                    })}
+                </div>
+            )}
         </div>
     )
 }

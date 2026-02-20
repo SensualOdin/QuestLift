@@ -155,12 +155,7 @@ html {
   text-size-adjust: 100%;
 }
 
-/* Standalone mode: add top padding for status bar */
-@media all and (display-mode: standalone) {
-  body {
-    padding-top: env(safe-area-inset-top);
-  }
-}
+/* Standalone mode: status bar uses 'default' style so no overlap */
 
 /* Disable long-press context menu on interactive elements */
 button, a, input, select, textarea {
