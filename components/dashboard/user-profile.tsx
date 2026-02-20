@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Sword, Shield, Wind } from "lucide-react"
+import { Sword, Shield, Wind, Flame } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { createClient } from "@/lib/supabase/client"
 import { getXPForNextLevel } from "@/lib/xp-engine"
@@ -64,6 +64,26 @@ function getNextTier(className: string | null, level: number): { nextLevel: numb
     }
 
     return null // Already legendary
+}
+
+function getFrameStyle(frame: string | null | undefined): string {
+    if (!frame) return 'border-2 border-slate-800/80'
+    switch (frame) {
+        case 'bronze': return 'border-2 border-amber-700 shadow-[0_0_12px_rgba(180,83,9,0.4)]'
+        case 'silver': return 'border-2 border-slate-400 shadow-[0_0_12px_rgba(148,163,184,0.4)]'
+        case 'gold': return 'border-2 border-yellow-500 shadow-[0_0_16px_rgba(234,179,8,0.5)]'
+        case 'flame': return 'border-2 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.5)]'
+        case 'legendary': return 'border-2 border-purple-400 shadow-[0_0_24px_rgba(192,132,252,0.6)]'
+        default: return 'border-2 border-slate-800/80'
+    }
+}
+
+function getStreakColor(streak: number): string {
+    if (streak >= 14) return 'text-purple-400'
+    if (streak >= 7) return 'text-blue-400'
+    if (streak >= 3) return 'text-red-400'
+    if (streak >= 1) return 'text-orange-400'
+    return 'text-slate-600'
 }
 
 export function UserProfile() {
@@ -138,7 +158,7 @@ export function UserProfile() {
                         {/* Character Art */}
                         <div className="relative">
                             <div className="absolute inset-0 bg-indigo-500/10 rounded-2xl blur-xl pointer-events-none" />
-                            <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-2xl overflow-hidden border-2 border-slate-800/80 bg-slate-950">
+                            <div className={`relative w-44 h-44 sm:w-52 sm:h-52 rounded-2xl overflow-hidden bg-slate-950 ${getFrameStyle(user.equipped_frame)}`}>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                     src={charSrc}
@@ -155,6 +175,11 @@ export function UserProfile() {
                         {/* Name & Class */}
                         <div className="text-center pt-1">
                             <CardTitle className="text-xl sm:text-2xl font-bold text-white tracking-tight">{user.display_name}</CardTitle>
+                            {user.equipped_title && (
+                                <p className="text-[10px] text-yellow-400/80 font-semibold uppercase tracking-wider mt-0.5">
+                                    {user.equipped_title}
+                                </p>
+                            )}
                             <p className={`text-sm font-semibold mt-1 flex items-center justify-center gap-1.5 ${tierColor}`}>
                                 <ClassIcon className="w-3.5 h-3.5" /> {tier}
                             </p>
@@ -216,13 +241,24 @@ export function UserProfile() {
                         </div>
                     </div>
 
-                    {/* Inventory Summary */}
-                    <div className="flex items-center justify-between px-1 pt-2">
-                        <span className="text-xs font-medium text-slate-400 flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-yellow-600 shadow-[0_0_8px_rgba(202,138,4,0.6)]" />
-                            Iron Scraps
-                        </span>
-                        <span className="text-sm font-bold text-yellow-500">{user.iron_scraps || 0}</span>
+                    {/* Streak & Inventory */}
+                    <div className="space-y-2 pt-2">
+                        <div className="flex items-center justify-between px-1">
+                            <span className="text-xs font-medium text-slate-400 flex items-center gap-2">
+                                <Flame className={`w-4 h-4 ${getStreakColor(user.current_streak || 0)}`} />
+                                Streak
+                            </span>
+                            <span className={`text-sm font-bold ${getStreakColor(user.current_streak || 0)}`}>
+                                {user.current_streak || 0} day{(user.current_streak || 0) !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between px-1">
+                            <span className="text-xs font-medium text-slate-400 flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-yellow-600 shadow-[0_0_8px_rgba(202,138,4,0.6)]" />
+                                Iron Scraps
+                            </span>
+                            <span className="text-sm font-bold text-yellow-500">{user.iron_scraps || 0}</span>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Check, Dumbbell, Timer, Plus, Trash2, Activity, Trophy } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
-import { fetchAllExercises, fetchExercisePR, saveWorkoutSession, type Exercise } from "@/lib/supabase/data-hooks"
+import { fetchAllExercises, fetchExercisePR, saveWorkoutSession, type Exercise, type WorkoutResult } from "@/lib/supabase/data-hooks"
 import { useRouter } from "next/navigation"
 import { ExercisePickerModal } from "./exercise-picker-modal"
 import { TemplatePicker } from "./template-picker"
 import { AchievementToast } from "@/components/dashboard/achievement-toast"
+import { BattleLogModal } from "./battle-log-modal"
+import { LevelUpModal } from "./level-up-modal"
 import type { Achievement } from "@/lib/achievements"
 
 interface LoggedSet {
@@ -49,6 +51,11 @@ export function WorkoutLogger() {
 
     // Achievement toast
     const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
+
+    // Post-workout modals
+    const [workoutResult, setWorkoutResult] = useState<WorkoutResult | null>(null)
+    const [showBattleLog, setShowBattleLog] = useState(false)
+    const [showLevelUp, setShowLevelUp] = useState(false)
 
     useEffect(() => {
         loadExercises()
@@ -255,26 +262,67 @@ export function WorkoutLogger() {
 
         if (result.success) {
             await refreshProfile()
+            setWorkoutResult(result)
 
-            if (result.achievements.length > 0) {
-                setNewAchievements(result.achievements)
-                // Wait for achievements to be dismissed before navigating
-            } else {
-                router.push('/dashboard/history')
-            }
+            // Show battle log first
+            setShowBattleLog(true)
         } else {
             alert('Failed to save workout. Please try again.')
             setIsSaving(false)
         }
     }
 
+    const handleBattleLogDismiss = () => {
+        setShowBattleLog(false)
+        if (workoutResult && workoutResult.newLevel > workoutResult.oldLevel) {
+            setShowLevelUp(true)
+        } else if (workoutResult && workoutResult.achievements.length > 0) {
+            setNewAchievements(workoutResult.achievements)
+        } else {
+            router.push('/dashboard')
+        }
+    }
+
+    const handleLevelUpDismiss = () => {
+        setShowLevelUp(false)
+        if (workoutResult && workoutResult.achievements.length > 0) {
+            setNewAchievements(workoutResult.achievements)
+        } else {
+            router.push('/dashboard')
+        }
+    }
+
     const handleDismissAchievements = () => {
         setNewAchievements([])
-        router.push('/dashboard/history')
+        router.push('/dashboard')
     }
 
     return (
         <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-24">
+            {/* Post-Workout Modals */}
+            {workoutResult && (
+                <BattleLogModal
+                    isOpen={showBattleLog}
+                    onDismiss={handleBattleLogDismiss}
+                    battleLog={workoutResult.battleLog}
+                    xpEarned={workoutResult.xpEarned}
+                    totalVolume={workoutResult.totalVolume}
+                    streakCount={workoutResult.streakCount}
+                    ironScrapsEarned={workoutResult.ironScrapsEarned}
+                    oldLevel={workoutResult.oldLevel}
+                    newLevel={workoutResult.newLevel}
+                />
+            )}
+
+            {workoutResult && (
+                <LevelUpModal
+                    isOpen={showLevelUp}
+                    oldLevel={workoutResult.oldLevel}
+                    newLevel={workoutResult.newLevel}
+                    onDismiss={handleLevelUpDismiss}
+                />
+            )}
+
             {/* Achievement Toast */}
             {newAchievements.length > 0 && (
                 <AchievementToast achievements={newAchievements} onDismiss={handleDismissAchievements} />

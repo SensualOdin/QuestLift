@@ -529,13 +529,39 @@ export async function joinPartyByCode(userId: string, joinCode: string): Promise
 /**
  * Saves a workout and updates all related user stats (XP, level, attributes, raid damage).
  */
+export interface BattleLogEntry {
+    exerciseName: string
+    sets: number
+    reps: number
+    weight: number
+    volume: number
+    isPR: boolean
+    exerciseType: string
+}
+
+export interface WorkoutResult {
+    success: boolean
+    achievements: Achievement[]
+    oldLevel: number
+    newLevel: number
+    xpEarned: number
+    streakCount: number
+    ironScrapsEarned: number
+    battleLog: BattleLogEntry[]
+    totalVolume: number
+}
+
 export async function saveWorkoutSession(
     workout: WorkoutInsert,
     sets: WorkoutSetInsert[],
     exerciseTypes: Map<string, string>, // exercise_id -> exercise_type
     userId: string,
     userClassName?: string | null
-): Promise<{ success: boolean, achievements: Achievement[] }> {
+): Promise<WorkoutResult> {
+    const emptyResult: WorkoutResult = {
+        success: false, achievements: [], oldLevel: 1, newLevel: 1,
+        xpEarned: 0, streakCount: 0, ironScrapsEarned: 0, battleLog: [], totalVolume: 0
+    }
     const supabase = createClient()
 
     // Insert Workout
@@ -547,7 +573,7 @@ export async function saveWorkoutSession(
 
     if (workoutError || !insertedWorkout) {
         console.error('Error saving workout:', workoutError)
-        return { success: false, achievements: [] }
+        return emptyResult
     }
 
     // Assign Workout ID to all sets
@@ -563,7 +589,48 @@ export async function saveWorkoutSession(
 
     if (setsError) {
         console.error('Error saving workout sets:', setsError)
-        return { success: false, achievements: [] }
+        return emptyResult
+    }
+
+    // Build battle log from the sets we just saved
+    const exerciseNameMap = new Map<string, string>()
+    // We need exercise names - fetch them
+    const exerciseIds = [...new Set(sets.map(s => s.exercise_id))]
+    const { data: exerciseData } = await supabase
+        .from('exercises')
+        .select('id, name')
+        .in('id', exerciseIds)
+    for (const ex of (exerciseData || [])) {
+        exerciseNameMap.set(ex.id, ex.name)
+    }
+
+    // Group sets by exercise for battle log
+    const exerciseGroups = new Map<string, { sets: number, totalReps: number, maxWeight: number, totalVolume: number, isPR: boolean, exerciseType: string }>()
+    for (const set of sets) {
+        const exId = set.exercise_id
+        const exType = exerciseTypes.get(exId) || 'Strength'
+        const existing = exerciseGroups.get(exId) || { sets: 0, totalReps: 0, maxWeight: 0, totalVolume: 0, isPR: false, exerciseType: exType }
+        existing.sets += 1
+        const w = Number(set.weight) || 0
+        const r = Number(set.reps) || 0
+        existing.totalReps += r
+        existing.maxWeight = Math.max(existing.maxWeight, w)
+        existing.totalVolume += w * r
+        if (set.is_pr) existing.isPR = true
+        exerciseGroups.set(exId, existing)
+    }
+
+    const battleLog: BattleLogEntry[] = []
+    for (const [exId, data] of exerciseGroups) {
+        battleLog.push({
+            exerciseName: exerciseNameMap.get(exId) || 'Unknown',
+            sets: data.sets,
+            reps: data.totalReps,
+            weight: data.maxWeight,
+            volume: data.totalVolume,
+            isPR: data.isPR,
+            exerciseType: data.exerciseType,
+        })
     }
 
     // Calculate XP using the real XP engine
@@ -609,22 +676,51 @@ export async function saveWorkoutSession(
         }
     }
 
-    // Fetch current user data to compute new level
+    // Fetch current user data to compute new level + streak
     const { data: currentUser } = await supabase
         .from('users')
-        .select('xp_current, level, str_volume_lifetime, dex_minutes_lifetime, con_sets_lifetime')
+        .select('xp_current, level, str_volume_lifetime, dex_minutes_lifetime, con_sets_lifetime, current_streak, last_workout_date, iron_scraps')
         .eq('id', userId)
         .single()
 
+    let oldLevel = 1
+    let newLevel = 1
+    let streakCount = 0
+    let ironScrapsEarned = 0
+
     if (currentUser) {
+        oldLevel = currentUser.level || 1
         const newXpCurrent = (currentUser.xp_current || 0) + xpEarned
         const newStrVolume = (currentUser.str_volume_lifetime || 0) + strVolume
         const newDexMinutes = (currentUser.dex_minutes_lifetime || 0) + dexMinutes
         const newConSets = (currentUser.con_sets_lifetime || 0) + conSets
 
-        // Compute new level from total lifetime XP
-        // Since xp_current is cumulative, we use it directly for level calculation
-        const newLevel = calculateLevelFromXP(newXpCurrent)
+        newLevel = calculateLevelFromXP(newXpCurrent)
+
+        // --- Streak Logic ---
+        const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+        const lastDate = currentUser.last_workout_date // already a date string or null
+        let newStreak = currentUser.current_streak || 0
+
+        if (lastDate === today) {
+            // Already worked out today, no streak change
+        } else if (lastDate) {
+            const lastDateObj = new Date(lastDate + 'T00:00:00')
+            const todayObj = new Date(today + 'T00:00:00')
+            const diffDays = Math.round((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24))
+            if (diffDays === 1) {
+                newStreak += 1
+            } else {
+                newStreak = 1 // Gap > 1 day, reset
+            }
+        } else {
+            newStreak = 1 // First workout ever
+        }
+
+        streakCount = newStreak
+
+        // --- Iron Scraps: earn 10 per workout + 5 per streak day (bonus) ---
+        ironScrapsEarned = 10 + Math.min(newStreak, 10) * 5
 
         await supabase
             .from('users')
@@ -633,7 +729,10 @@ export async function saveWorkoutSession(
                 level: newLevel,
                 str_volume_lifetime: newStrVolume,
                 dex_minutes_lifetime: newDexMinutes,
-                con_sets_lifetime: newConSets
+                con_sets_lifetime: newConSets,
+                current_streak: newStreak,
+                last_workout_date: today,
+                iron_scraps: (currentUser.iron_scraps || 0) + ironScrapsEarned,
             })
             .eq('id', userId)
     }
@@ -696,7 +795,17 @@ export async function saveWorkoutSession(
         isComebackQuest: consistency.comebackQuest
     })
 
-    return { success: true, achievements: newAchievements }
+    return {
+        success: true,
+        achievements: newAchievements,
+        oldLevel,
+        newLevel,
+        xpEarned,
+        streakCount,
+        ironScrapsEarned,
+        battleLog,
+        totalVolume: strVolume,
+    }
 }
 
 /**
@@ -726,5 +835,73 @@ export async function updateUserClass(userId: string, className: string): Promis
         .update({ class_name: className })
         .eq('id', userId)
 
+    return !error
+}
+
+/**
+ * Fetches all shop items with user purchase status.
+ */
+export async function fetchShopItems(userId: string) {
+    const supabase = createClient()
+
+    const [{ data: items }, { data: purchases }] = await Promise.all([
+        supabase.from('shop_items').select('*').order('cost', { ascending: true }),
+        supabase.from('user_purchases').select('item_id').eq('user_id', userId),
+    ])
+
+    const ownedIds = new Set((purchases || []).map(p => p.item_id))
+
+    return (items || []).map(item => ({
+        ...item,
+        owned: ownedIds.has(item.id),
+    }))
+}
+
+/**
+ * Purchase a shop item. Returns success/error.
+ */
+export async function purchaseShopItem(userId: string, itemId: string, cost: number): Promise<{ success: boolean, error?: string }> {
+    const supabase = createClient()
+
+    // Get current scraps
+    const { data: userData } = await supabase
+        .from('users')
+        .select('iron_scraps')
+        .eq('id', userId)
+        .single()
+
+    if (!userData || (userData.iron_scraps || 0) < cost) {
+        return { success: false, error: 'Not enough Iron Scraps' }
+    }
+
+    // Deduct scraps
+    const { error: updateError } = await supabase
+        .from('users')
+        .update({ iron_scraps: (userData.iron_scraps || 0) - cost })
+        .eq('id', userId)
+
+    if (updateError) return { success: false, error: 'Failed to deduct scraps' }
+
+    // Record purchase
+    const { error: purchaseError } = await supabase
+        .from('user_purchases')
+        .insert({ user_id: userId, item_id: itemId })
+
+    if (purchaseError) {
+        // Refund on failure
+        await supabase.from('users').update({ iron_scraps: userData.iron_scraps }).eq('id', userId)
+        return { success: false, error: 'Purchase failed' }
+    }
+
+    return { success: true }
+}
+
+/**
+ * Equip or unequip a shop item.
+ */
+export async function equipShopItem(userId: string, type: 'title' | 'frame', value: string | null): Promise<boolean> {
+    const supabase = createClient()
+    const update = type === 'title' ? { equipped_title: value } : { equipped_frame: value }
+    const { error } = await supabase.from('users').update(update).eq('id', userId)
     return !error
 }
