@@ -17,11 +17,11 @@ export default async function DashboardLayout({
 
     return (
         <div className="w-full relative z-10 flex flex-col min-h-screen">
-            <div className="mx-auto w-full max-w-6xl p-4 md:p-8 pb-0 shrink-0">
+            <div className="mx-auto w-full max-w-6xl px-3 pt-3 sm:p-4 md:p-8 pb-0 shrink-0">
                 <Header />
                 <MainNav />
             </div>
-            <main className="flex-1 pb-24 sm:pb-8">
+            <main className="flex-1 pb-28 sm:pb-8">
                 {children}
             </main>
         </div>

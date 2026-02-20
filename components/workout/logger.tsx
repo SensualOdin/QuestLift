@@ -255,29 +255,29 @@ export function WorkoutLogger() {
     }
 
     return (
-        <div className="space-y-6 pb-24">
+        <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-24">
             {/* Achievement Toast */}
             {newAchievements.length > 0 && (
                 <AchievementToast achievements={newAchievements} onDismiss={handleDismissAchievements} />
             )}
 
             {/* Header & Global Rest Timer */}
-            <div className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md py-4 border-b border-slate-800/60 -mx-4 px-4 sm:mx-0 sm:px-0 sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:py-0">
-                <div className="flex flex-row items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+            <div className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-800/60 -mx-4 px-4 sm:mx-0 sm:px-0 sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:py-0">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                        <h2 className="text-lg sm:text-2xl font-bold text-white">
                             Current Workout
                         </h2>
-                        <p className="text-xs sm:text-sm text-indigo-400 mt-0.5">
-                            {workoutExercises.length} Exercises Active
+                        <p className="text-xs text-indigo-400">
+                            {workoutExercises.length} exercise{workoutExercises.length !== 1 ? 's' : ''}
                         </p>
                     </div>
 
-                    <div className={`border rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2 sm:gap-3 transition-colors ${timerRunning ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-900 border-slate-800'}`}>
-                        <Timer className={`w-4 h-4 sm:w-5 sm:h-5 ${timerRunning ? 'text-indigo-400 animate-pulse' : 'text-slate-500'}`} />
+                    <div className={`border rounded-xl px-3 py-1.5 flex items-center gap-2 transition-colors shrink-0 ${timerRunning ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-900 border-slate-800'}`}>
+                        <Timer className={`w-4 h-4 ${timerRunning ? 'text-indigo-400 animate-pulse' : 'text-slate-500'}`} />
                         <div className="flex flex-col">
-                            <span className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider font-semibold leading-tight">Rest Timer</span>
-                            <span className={`font-mono text-sm sm:text-base font-bold leading-tight ${timerRunning ? 'text-indigo-400' : 'text-slate-300'}`}>
+                            <span className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold leading-tight">Rest</span>
+                            <span className={`font-mono text-sm font-bold leading-tight ${timerRunning ? 'text-indigo-400' : 'text-slate-300'}`}>
                                 {formatTime(activeTimer)}
                             </span>
                         </div>
@@ -316,66 +316,64 @@ export function WorkoutLogger() {
                                 </Button>
                             </CardHeader>
                             <CardContent className="p-2 sm:p-4 space-y-2">
-                                <div className="grid grid-cols-12 gap-1 sm:gap-4 text-[10px] uppercase tracking-wider font-semibold text-slate-500 text-center px-1 mb-2">
-                                    <div className="col-span-2 sm:col-span-1 text-left hidden sm:block">Set</div>
+                                {/* Column headers - mobile: compact, desktop: full */}
+                                <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold text-slate-500 px-1 mb-1">
+                                    <div className="w-8 text-center hidden sm:block">Set</div>
+                                    <div className="hidden sm:block w-20 text-center">Prev</div>
                                     {isStrength ? (
                                         <>
-                                            <div className="col-span-3 hidden sm:block">Previous</div>
-                                            <div className="col-span-4 sm:col-span-2 text-left sm:text-center">lbs</div>
-                                            <div className="col-span-4 sm:col-span-2 text-left sm:text-center">Reps</div>
-                                            <div className="col-span-4 sm:col-span-2 text-left sm:text-center">RPE</div>
+                                            <div className="flex-1 text-center">lbs</div>
+                                            <div className="flex-1 text-center">Reps</div>
+                                            <div className="flex-1 text-center">RPE</div>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="col-span-3 hidden sm:block">Previous</div>
-                                            <div className="col-span-6 sm:col-span-3 text-left sm:text-center">Duration (m)</div>
-                                            <div className="col-span-6 sm:col-span-3 text-left sm:text-center">RPE</div>
+                                            <div className="flex-1 text-center">Min</div>
+                                            <div className="flex-1 text-center">RPE</div>
                                         </>
                                     )}
-                                    <div className="col-span-4 sm:col-span-2 text-right"><Check className="w-4 h-4 inline-block" /></div>
+                                    <div className="w-11 sm:w-11 text-center"><Check className="w-3.5 h-3.5 inline-block" /></div>
                                 </div>
 
                                 {activeEx.sets.map((set, setIndex) => (
-                                    <div key={set.id} className={`grid grid-cols-12 gap-2 sm:gap-4 items-center p-2 rounded-xl border transition-colors ${set.isPR ? 'bg-yellow-500/10 border-yellow-500/30' : set.completed ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-slate-950/50 border-slate-800/60'}`}>
-                                        <div className="col-span-2 sm:col-span-1 text-center font-bold text-slate-400 hidden sm:block">
+                                    <div key={set.id} className={`flex items-center gap-2 p-1.5 sm:p-2 rounded-xl border transition-colors ${set.isPR ? 'bg-yellow-500/10 border-yellow-500/30' : set.completed ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-slate-950/50 border-slate-800/60'}`}>
+                                        <div className="w-8 text-center font-bold text-slate-400 text-sm hidden sm:block">
                                             {set.isPR ? <Trophy className="w-4 h-4 text-yellow-500 mx-auto" /> : setIndex + 1}
                                         </div>
-                                        <div className="col-span-3 text-center hidden sm:block">
-                                            <span className="text-slate-700">{activeEx.previousBest > 0 ? `${activeEx.previousBest} lbs` : '-'}</span>
+                                        <div className="hidden sm:block w-20 text-center">
+                                            <span className="text-xs text-slate-700">{activeEx.previousBest > 0 ? `${activeEx.previousBest}` : '-'}</span>
                                         </div>
 
                                         {isStrength ? (
                                             <>
-                                                <div className="col-span-4 sm:col-span-2">
-                                                    <Input type="number" placeholder="0" value={set.weight} onChange={e => updateSet(activeEx.id, set.id, 'weight', e.target.value)} disabled={set.completed} className={`h-10 sm:h-9 text-base sm:text-sm text-center bg-slate-900 border-slate-800 ${set.isPR ? 'text-yellow-400 font-bold' : ''}`} />
+                                                <div className="flex-1">
+                                                    <Input inputMode="decimal" type="number" placeholder="0" value={set.weight} onChange={e => updateSet(activeEx.id, set.id, 'weight', e.target.value)} disabled={set.completed} className={`h-11 text-base text-center bg-slate-900 border-slate-800 px-1 ${set.isPR ? 'text-yellow-400 font-bold' : ''}`} />
                                                 </div>
-                                                <div className="col-span-4 sm:col-span-2">
-                                                    <Input type="number" placeholder="0" value={set.reps} onChange={e => updateSet(activeEx.id, set.id, 'reps', e.target.value)} disabled={set.completed} className="h-10 sm:h-9 text-base sm:text-sm text-center bg-slate-900 border-slate-800" />
+                                                <div className="flex-1">
+                                                    <Input inputMode="numeric" type="number" placeholder="0" value={set.reps} onChange={e => updateSet(activeEx.id, set.id, 'reps', e.target.value)} disabled={set.completed} className="h-11 text-base text-center bg-slate-900 border-slate-800 px-1" />
                                                 </div>
-                                                <div className="col-span-4 sm:col-span-2">
-                                                    <Input type="number" placeholder="RPE" value={set.rpe} onChange={e => updateSet(activeEx.id, set.id, 'rpe', e.target.value)} disabled={set.completed} className="h-10 sm:h-9 text-base sm:text-sm text-center bg-slate-900 border-slate-800" />
+                                                <div className="flex-1">
+                                                    <Input inputMode="decimal" type="number" placeholder="RPE" value={set.rpe} onChange={e => updateSet(activeEx.id, set.id, 'rpe', e.target.value)} disabled={set.completed} className="h-11 text-base text-center bg-slate-900 border-slate-800 px-1" />
                                                 </div>
                                             </>
                                         ) : (
                                             <>
-                                                <div className="col-span-4 sm:col-span-3">
-                                                    <Input type="number" placeholder="Min" value={set.duration} onChange={e => updateSet(activeEx.id, set.id, 'duration', e.target.value)} disabled={set.completed} className="h-10 sm:h-9 text-base sm:text-sm text-center bg-slate-900 border-slate-800" />
+                                                <div className="flex-1">
+                                                    <Input inputMode="numeric" type="number" placeholder="Min" value={set.duration} onChange={e => updateSet(activeEx.id, set.id, 'duration', e.target.value)} disabled={set.completed} className="h-11 text-base text-center bg-slate-900 border-slate-800 px-1" />
                                                 </div>
-                                                <div className="col-span-4 sm:col-span-3">
-                                                    <Input type="number" placeholder="RPE" value={set.rpe} onChange={e => updateSet(activeEx.id, set.id, 'rpe', e.target.value)} disabled={set.completed} className="h-10 sm:h-9 text-base sm:text-sm text-center bg-slate-900 border-slate-800" />
+                                                <div className="flex-1">
+                                                    <Input inputMode="decimal" type="number" placeholder="RPE" value={set.rpe} onChange={e => updateSet(activeEx.id, set.id, 'rpe', e.target.value)} disabled={set.completed} className="h-11 text-base text-center bg-slate-900 border-slate-800 px-1" />
                                                 </div>
                                             </>
                                         )}
 
-                                        <div className={`col-span-12 sm:col-span-2 flex justify-end gap-1 ${isStrength ? 'col-span-4' : 'col-span-4'}`}>
-                                            <Button variant={set.completed ? "default" : "secondary"} size="icon" onClick={() => toggleSetComplete(activeEx.id, set.id, activeEx.exerciseDef.exercise_type!)} className={`h-10 w-full sm:w-10 sm:h-10 flex-shrink-0 ${set.completed ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'bg-slate-800 text-slate-400 hover:bg-indigo-500 hover:text-white'}`}>
-                                                <Check className="w-5 h-5" />
-                                            </Button>
-                                        </div>
+                                        <Button variant={set.completed ? "default" : "secondary"} size="icon" onClick={() => toggleSetComplete(activeEx.id, set.id, activeEx.exerciseDef.exercise_type!)} className={`h-11 w-11 shrink-0 ${set.completed ? 'bg-indigo-500 text-white active:bg-indigo-600' : 'bg-slate-800 text-slate-400 active:bg-indigo-500 active:text-white'}`}>
+                                            <Check className="w-5 h-5" />
+                                        </Button>
                                     </div>
                                 ))}
 
-                                <Button variant="outline" onClick={() => addSet(activeEx.id)} className="w-full mt-2 border-dashed border-slate-700 bg-transparent text-slate-400 hover:text-white hover:border-indigo-500/50 hover:bg-indigo-500/10">
+                                <Button variant="outline" onClick={() => addSet(activeEx.id)} className="w-full mt-2 h-11 border-dashed border-slate-700 bg-transparent text-slate-400 active:text-white active:border-indigo-500/50 active:bg-indigo-500/10 hover:text-white hover:border-indigo-500/50 hover:bg-indigo-500/10">
                                     <Plus className="w-4 h-4 mr-2" /> Add Set
                                 </Button>
                             </CardContent>
@@ -385,11 +383,11 @@ export function WorkoutLogger() {
             </div>
 
             {/* Add Exercise Button */}
-            <div className="pt-4 border-t border-slate-800/60">
+            <div className="pt-3 sm:pt-4 border-t border-slate-800/60">
                 <Button
                     variant="outline"
                     onClick={() => setShowExercisePicker(true)}
-                    className="w-full border-dashed border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-indigo-500/50 hover:bg-indigo-500/10 py-6 text-base font-semibold"
+                    className="w-full border-dashed border-slate-700 bg-slate-900/40 text-slate-300 active:text-white active:border-indigo-500/50 active:bg-indigo-500/10 hover:text-white hover:border-indigo-500/50 hover:bg-indigo-500/10 py-5 sm:py-6 text-base font-semibold"
                 >
                     <Plus className="w-5 h-5 mr-2" /> Add Exercise
                 </Button>
@@ -406,9 +404,9 @@ export function WorkoutLogger() {
                 exercises={availableExercises}
             />
 
-            {/* Complete Workout Action */}
-            <div className="flex justify-end pt-4 pb-12 sm:pb-0">
-                <Button size="lg" disabled={isSaving || workoutExercises.length === 0} onClick={finishWorkout} className="px-8 font-bold shadow-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/25 w-full sm:w-auto">
+            {/* Complete Workout Action - sticky on mobile */}
+            <div className="fixed bottom-16 left-0 right-0 z-40 p-3 bg-slate-950/95 backdrop-blur-md border-t border-slate-800/60 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:pt-4 pb-safe">
+                <Button size="lg" disabled={isSaving || workoutExercises.length === 0} onClick={finishWorkout} className="w-full sm:w-auto px-8 py-6 sm:py-4 font-bold shadow-lg text-white text-base bg-indigo-600 active:bg-indigo-700 hover:bg-indigo-700 shadow-indigo-500/25">
                     {isSaving ? "Saving..." : "Complete Workout"}
                 </Button>
             </div>

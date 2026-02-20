@@ -68,18 +68,19 @@ export function Header() {
 
     return (
         <>
-            <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-800/60 gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-white mb-1">
-                        Inn / <span className="text-indigo-400">Dashboard</span>
+            <header className="flex items-center justify-between pb-4 sm:pb-6 border-b border-slate-800/60 gap-3">
+                <div className="min-w-0">
+                    <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-white truncate">
+                        <span className="sm:hidden">QuestLift</span>
+                        <span className="hidden sm:inline">Inn / <span className="text-indigo-400">Dashboard</span></span>
                     </h1>
-                    <p className="text-slate-400">Welcome back, {user?.display_name || 'Adventurer'}. The iron awaits.</p>
+                    <p className="text-slate-400 text-xs sm:text-base truncate">Welcome back, {user?.display_name || 'Adventurer'}</p>
                 </div>
 
-                <div className="flex items-center gap-4 bg-slate-900/50 p-2 rounded-2xl border border-slate-800/80 backdrop-blur-md">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-400 rounded-xl font-medium text-sm border border-amber-500/20">
-                        <Coins className="w-4 h-4" />
-                        <span>{user?.iron_scraps || 0} Scraps</span>
+                <div className="flex items-center gap-2 sm:gap-4 bg-slate-900/50 p-1.5 sm:p-2 rounded-2xl border border-slate-800/80 backdrop-blur-md shrink-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-amber-500/10 text-amber-400 rounded-xl font-medium text-xs sm:text-sm border border-amber-500/20">
+                        <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span>{user?.iron_scraps || 0}</span>
                     </div>
 
                     {/* Notifications Popover */}
