@@ -4,7 +4,6 @@ import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Sword, Shield, Wind } from "lucide-react"
-import Image from "next/image"
 import { useUserStore } from "@/lib/store/user-store"
 import { createClient } from "@/lib/supabase/client"
 import { getXPForNextLevel } from "@/lib/xp-engine"
@@ -117,8 +116,7 @@ export function UserProfile() {
     const xpIntoCurrentLevel = currentXP % xpNeeded
     const progressPercent = Math.min((xpIntoCurrentLevel / xpNeeded) * 100, 100)
 
-    const { src: charSrcBase, tier, color: tierColor } = getCharacterArt(user.class_name, level)
-    const charSrc = `${charSrcBase}?v=2`
+    const { src: charSrc, tier, color: tierColor } = getCharacterArt(user.class_name, level)
     const ClassIcon = getClassIcon(user.class_name)
     const nextTier = getNextTier(user.class_name, level)
 
@@ -141,12 +139,11 @@ export function UserProfile() {
                         <div className="relative">
                             <div className="absolute inset-0 bg-indigo-500/10 rounded-2xl blur-xl pointer-events-none" />
                             <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-2xl overflow-hidden border-2 border-slate-800/80 bg-slate-950">
-                                <Image
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
                                     src={charSrc}
                                     alt={tier}
-                                    fill
-                                    className="object-contain"
-                                    priority
+                                    className="w-full h-full object-contain"
                                 />
                             </div>
                             {/* Level badge */}
