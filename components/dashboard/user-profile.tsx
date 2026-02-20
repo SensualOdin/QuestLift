@@ -117,7 +117,8 @@ export function UserProfile() {
     const xpIntoCurrentLevel = currentXP % xpNeeded
     const progressPercent = Math.min((xpIntoCurrentLevel / xpNeeded) * 100, 100)
 
-    const { src: charSrc, tier, color: tierColor } = getCharacterArt(user.class_name, level)
+    const { src: charSrcBase, tier, color: tierColor } = getCharacterArt(user.class_name, level)
+    const charSrc = `${charSrcBase}?v=2`
     const ClassIcon = getClassIcon(user.class_name)
     const nextTier = getNextTier(user.class_name, level)
 
