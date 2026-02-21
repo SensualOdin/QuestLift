@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Check, Dumbbell, Timer, Plus, Trash2, Activity, Trophy } from "lucide-react"
+import { Check, Dumbbell, Timer, Plus, Trash2, Activity, Trophy, Info } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { fetchAllExercises, fetchExercisePR, saveWorkoutSession, type Exercise, type WorkoutResult } from "@/lib/supabase/data-hooks"
 import { useRouter } from "next/navigation"
@@ -14,6 +14,7 @@ import { AchievementToast } from "@/components/dashboard/achievement-toast"
 import { BattleLogModal } from "./battle-log-modal"
 import { LevelUpModal } from "./level-up-modal"
 import type { Achievement } from "@/lib/achievements"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface LoggedSet {
     id: string
@@ -31,6 +32,77 @@ interface ActiveExercise {
     exerciseDef: Exercise
     sets: LoggedSet[]
     previousBest: number
+}
+
+const WORKOUT_STORAGE_KEY = 'questlift_active_workout'
+const WORKOUT_EXPIRY_HOURS = 24
+
+interface SavedWorkoutState {
+    workoutExercises: ActiveExercise[]
+    workoutStartTime: string
+    savedAt: string
+}
+
+function saveWorkoutToStorage(exercises: ActiveExercise[], startTime: Date | null) {
+    if (exercises.length === 0) {
+        localStorage.removeItem(WORKOUT_STORAGE_KEY)
+        return
+    }
+    const state: SavedWorkoutState = {
+        workoutExercises: exercises,
+        workoutStartTime: startTime?.toISOString() || new Date().toISOString(),
+        savedAt: new Date().toISOString(),
+    }
+    localStorage.setItem(WORKOUT_STORAGE_KEY, JSON.stringify(state))
+}
+
+function loadWorkoutFromStorage(): SavedWorkoutState | null {
+    try {
+        const raw = localStorage.getItem(WORKOUT_STORAGE_KEY)
+        if (!raw) return null
+        const state: SavedWorkoutState = JSON.parse(raw)
+        const savedAt = new Date(state.savedAt)
+        const hoursAgo = (Date.now() - savedAt.getTime()) / (1000 * 60 * 60)
+        if (hoursAgo > WORKOUT_EXPIRY_HOURS) {
+            localStorage.removeItem(WORKOUT_STORAGE_KEY)
+            return null
+        }
+        return state
+    } catch {
+        localStorage.removeItem(WORKOUT_STORAGE_KEY)
+        return null
+    }
+}
+
+function clearWorkoutStorage() {
+    localStorage.removeItem(WORKOUT_STORAGE_KEY)
+}
+
+function RPEInfoPopover() {
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <button className="inline-flex items-center justify-center text-slate-500 hover:text-indigo-400 transition-colors">
+                    <Info className="w-3 h-3" />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 bg-slate-900 border-slate-700 text-sm" side="top" align="center">
+                <div className="space-y-2">
+                    <p className="font-semibold text-white text-xs uppercase tracking-wider">RPE Scale</p>
+                    <p className="text-[11px] text-slate-400">Rate of Perceived Exertion - how hard the set felt</p>
+                    <div className="space-y-1 text-xs">
+                        <div className="flex justify-between"><span className="text-red-400 font-bold">10</span><span className="text-slate-300">Max effort, no reps left</span></div>
+                        <div className="flex justify-between"><span className="text-orange-400 font-bold">9</span><span className="text-slate-300">Could maybe do 1 more</span></div>
+                        <div className="flex justify-between"><span className="text-amber-400 font-bold">8</span><span className="text-slate-300">Could do 2 more reps</span></div>
+                        <div className="flex justify-between"><span className="text-yellow-400 font-bold">7</span><span className="text-slate-300">Could do 3 more reps</span></div>
+                        <div className="flex justify-between"><span className="text-green-400 font-bold">6</span><span className="text-slate-300">Could do 4+ more reps</span></div>
+                        <div className="flex justify-between"><span className="text-emerald-400 font-bold">5</span><span className="text-slate-300">Moderate effort</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400 font-bold">1-4</span><span className="text-slate-300">Light / warmup</span></div>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
 }
 
 export function WorkoutLogger() {
@@ -57,10 +129,24 @@ export function WorkoutLogger() {
     const [showBattleLog, setShowBattleLog] = useState(false)
     const [showLevelUp, setShowLevelUp] = useState(false)
 
+    // Resume prompt state
+    const [showResumePrompt, setShowResumePrompt] = useState(false)
+    const [savedState, setSavedState] = useState<SavedWorkoutState | null>(null)
+
     useEffect(() => {
         loadExercises()
-        setWorkoutStartTime(new Date())
+        const saved = loadWorkoutFromStorage()
+        if (saved && saved.workoutExercises.length > 0) {
+            setSavedState(saved)
+            setShowResumePrompt(true)
+        } else {
+            setWorkoutStartTime(new Date())
+        }
     }, [])
+
+    useEffect(() => {
+        saveWorkoutToStorage(workoutExercises, workoutStartTime)
+    }, [workoutExercises, workoutStartTime])
 
     // Request notification permission on mount
     useEffect(() => {
@@ -157,6 +243,29 @@ export function WorkoutLogger() {
         }))
     }
 
+    const deleteSet = (exerciseId: string, setId: string) => {
+        setWorkoutExercises(prev => {
+            const exercise = prev.find(ex => ex.id === exerciseId)
+            if (!exercise) return prev
+
+            // If this is the last set, remove the entire exercise
+            if (exercise.sets.length <= 1) {
+                return prev.filter(ex => ex.id !== exerciseId)
+            }
+
+            // Remove the set and re-number remaining sets
+            return prev.map(ex => {
+                if (ex.id === exerciseId) {
+                    const filteredSets = ex.sets
+                        .filter(s => s.id !== setId)
+                        .map((s, i) => ({ ...s, set_order: i + 1 }))
+                    return { ...ex, sets: filteredSets }
+                }
+                return ex
+            })
+        })
+    }
+
     const updateSet = (exerciseId: string, setId: string, field: keyof LoggedSet, value: string | boolean) => {
         setWorkoutExercises(workoutExercises.map(ex => {
             if (ex.id === exerciseId) {
@@ -202,6 +311,22 @@ export function WorkoutLogger() {
 
     const removeExercise = (exerciseId: string) => {
         setWorkoutExercises(workoutExercises.filter(ex => ex.id !== exerciseId))
+    }
+
+    const handleResumeWorkout = () => {
+        if (savedState) {
+            setWorkoutExercises(savedState.workoutExercises)
+            setWorkoutStartTime(new Date(savedState.workoutStartTime))
+        }
+        setShowResumePrompt(false)
+        setSavedState(null)
+    }
+
+    const handleStartFresh = () => {
+        clearWorkoutStorage()
+        setWorkoutStartTime(new Date())
+        setShowResumePrompt(false)
+        setSavedState(null)
     }
 
     const finishWorkout = async () => {
@@ -261,6 +386,7 @@ export function WorkoutLogger() {
         )
 
         if (result.success) {
+            clearWorkoutStorage()
             await refreshProfile()
             setWorkoutResult(result)
 
@@ -299,6 +425,28 @@ export function WorkoutLogger() {
 
     return (
         <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-24">
+            {showResumePrompt && (
+                <Card className="border-amber-500/30 bg-amber-500/10 backdrop-blur-xl">
+                    <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center gap-2 text-amber-400 font-semibold">
+                            <Dumbbell className="w-5 h-5" />
+                            Unfinished Workout Found
+                        </div>
+                        <p className="text-sm text-slate-300">
+                            You have a workout in progress with {savedState?.workoutExercises.length} exercise{(savedState?.workoutExercises.length || 0) !== 1 ? 's' : ''}. Resume where you left off?
+                        </p>
+                        <div className="flex gap-3">
+                            <Button onClick={handleResumeWorkout} className="flex-1 bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-600 font-semibold">
+                                Resume Workout
+                            </Button>
+                            <Button variant="outline" onClick={handleStartFresh} className="flex-1 border-slate-700 text-slate-300 hover:text-white">
+                                Start Fresh
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Post-Workout Modals */}
             {workoutResult && (
                 <BattleLogModal
@@ -389,12 +537,12 @@ export function WorkoutLogger() {
                                         <>
                                             <div className="flex-1 text-center">lbs</div>
                                             <div className="flex-1 text-center">Reps</div>
-                                            <div className="flex-1 text-center">RPE</div>
+                                            <div className="flex-1 text-center flex items-center justify-center gap-1">RPE <RPEInfoPopover /></div>
                                         </>
                                     ) : (
                                         <>
                                             <div className="flex-1 text-center">Min</div>
-                                            <div className="flex-1 text-center">RPE</div>
+                                            <div className="flex-1 text-center flex items-center justify-center gap-1">RPE <RPEInfoPopover /></div>
                                         </>
                                     )}
                                     <div className="w-11 sm:w-11 text-center"><Check className="w-3.5 h-3.5 inline-block" /></div>
@@ -402,6 +550,15 @@ export function WorkoutLogger() {
 
                                 {activeEx.sets.map((set, setIndex) => (
                                     <div key={set.id} className={`flex items-center gap-2 p-1.5 sm:p-2 rounded-xl border transition-colors ${set.isPR ? 'bg-yellow-500/10 border-yellow-500/30' : set.completed ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-slate-950/50 border-slate-800/60'}`}>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => deleteSet(activeEx.id, set.id)}
+                                            disabled={set.completed}
+                                            className="h-8 w-8 shrink-0 text-slate-600 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-30"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </Button>
                                         <div className="w-8 text-center font-bold text-slate-400 text-sm hidden sm:block">
                                             {set.isPR ? <Trophy className="w-4 h-4 text-yellow-500 mx-auto" /> : setIndex + 1}
                                         </div>
