@@ -32,6 +32,12 @@ export function BattleLogModal({
 
     const totalLines = battleLog.length
 
+    // Compute damage summary from battle log entries (totalVolume only counts strength)
+    const strengthDamage = battleLog.filter(e => e.exerciseType === 'Strength').reduce((sum, e) => sum + e.volume, 0)
+    const cardioMinutes = battleLog.filter(e => e.exerciseType !== 'Strength').reduce((sum, e) => sum + e.reps, 0)
+    const hasStrength = strengthDamage > 0
+    const hasCardio = cardioMinutes > 0
+
     useEffect(() => {
         if (!isOpen) {
             setVisibleLines(0)
@@ -152,10 +158,28 @@ export function BattleLogModal({
                         >
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 text-center">
-                                    <div className="text-[10px] text-slate-500 uppercase tracking-wider">Total Damage</div>
-                                    <div className="text-lg font-bold text-red-400 font-mono">
-                                        {totalVolume.toLocaleString()}
-                                    </div>
+                                    {hasStrength && (
+                                        <>
+                                            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Total Damage</div>
+                                            <div className="text-lg font-bold text-red-400 font-mono">
+                                                {strengthDamage.toLocaleString()}
+                                            </div>
+                                        </>
+                                    )}
+                                    {hasCardio && (
+                                        <>
+                                            <div className={`text-[10px] text-slate-500 uppercase tracking-wider ${hasStrength ? 'mt-1.5 pt-1.5 border-t border-slate-800/60' : ''}`}>Cardio</div>
+                                            <div className="text-lg font-bold text-emerald-400 font-mono">
+                                                {cardioMinutes} min
+                                            </div>
+                                        </>
+                                    )}
+                                    {!hasStrength && !hasCardio && (
+                                        <>
+                                            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Total Damage</div>
+                                            <div className="text-lg font-bold text-red-400 font-mono">0</div>
+                                        </>
+                                    )}
                                 </div>
                                 <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 text-center">
                                     <div className="text-[10px] text-slate-500 uppercase tracking-wider">XP Earned</div>
