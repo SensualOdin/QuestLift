@@ -8,6 +8,7 @@ import { useUserStore } from "@/lib/store/user-store"
 import { createClient } from "@/lib/supabase/client"
 import { fetchShopItems, purchaseShopItem, equipShopItem, fetchShopEquipment, purchaseEquipment } from "@/lib/supabase/data-hooks"
 import { motion, AnimatePresence } from "framer-motion"
+import { getEquipmentImagePath } from "@/lib/utils/equipment-images"
 
 interface ShopItem {
     id: string
@@ -375,10 +376,24 @@ function renderEquipmentCard(
 ) {
     const config = RARITY_CONFIG[eq.rarity] || RARITY_CONFIG.common
     const RarityIcon = config.icon
+    const imagePath = getEquipmentImagePath(eq.name, eq.slot)
 
     return (
         <Card key={eq.id} className={`${config.border} ${config.glow} bg-slate-900/40 overflow-hidden`}>
             <CardContent className="p-4 space-y-3">
+                {imagePath && (
+                    <div className="flex justify-center">
+                        <div className={`w-20 h-20 rounded-lg bg-slate-950/60 border ${config.border} p-1.5 flex items-center justify-center`}>
+                            <img
+                                src={imagePath}
+                                alt={eq.name}
+                                className="w-full h-full object-contain"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                            />
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
@@ -390,10 +405,6 @@ function renderEquipmentCard(
                     <span className={`text-[9px] uppercase tracking-wider font-bold ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2`}>
                         {eq.rarity}
                     </span>
-                </div>
-
-                <div className={`text-[10px] uppercase tracking-wider font-mono ${config.color} ${config.bg} rounded-lg px-2 py-1 text-center`}>
-                    {eq.slot}
                 </div>
 
                 {owned ? (

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { useUserStore } from "@/lib/store/user-store"
 import { createClient } from "@/lib/supabase/client"
 import { fetchUserEquipment, equipItem, unequipItem, fetchLootBoxes, openLootBox } from "@/lib/supabase/data-hooks"
+import { getEquipmentImagePath } from "@/lib/utils/equipment-images"
 
 const RARITY_CONFIG: Record<string, { color: string, bg: string, border: string, icon: typeof Star }> = {
     common: { color: 'text-slate-400', bg: 'bg-slate-400/10', border: 'border-slate-700', icon: Star },
@@ -150,11 +151,23 @@ export default function InventoryPage() {
                         const eq = equipped(slot)
                         const SlotIcon = SLOT_ICONS[slot] || Star
                         const config = eq ? RARITY_CONFIG[eq.equipment.rarity] || RARITY_CONFIG.common : null
+                        const imagePath = eq ? getEquipmentImagePath(eq.equipment.name, eq.equipment.slot) : null
 
                         return (
                             <Card key={slot} className={`${config?.border || 'border-slate-800'} bg-slate-900/40`}>
                                 <CardContent className="p-3 text-center space-y-2">
-                                    <SlotIcon className={`w-5 h-5 mx-auto ${config?.color || 'text-slate-600'}`} />
+                                    {eq && imagePath ? (
+                                        <div className="w-12 h-12 mx-auto rounded-lg bg-slate-950/60 p-1 flex items-center justify-center">
+                                            <img
+                                                src={imagePath}
+                                                alt={eq.equipment.name}
+                                                className="w-full h-full object-contain"
+                                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <SlotIcon className={`w-5 h-5 mx-auto ${config?.color || 'text-slate-600'}`} />
+                                    )}
                                     <p className="text-[10px] uppercase tracking-wider text-slate-500">{slot}</p>
                                     {eq ? (
                                         <>
@@ -217,22 +230,33 @@ export default function InventoryPage() {
                             const config = RARITY_CONFIG[eq.rarity] || RARITY_CONFIG.common
                             const RarityIcon = config.icon
                             const isEquipped = !!ue.equipped_slot
+                            const imagePath = getEquipmentImagePath(eq.name, eq.slot)
 
                             return (
                                 <Card key={ue.id} className={`${config.border} bg-slate-900/40 overflow-hidden`}>
                                     <CardContent className="p-4 space-y-3">
-                                        <div className="flex items-start justify-between">
+                                        <div className="flex items-start gap-3">
+                                            {imagePath && (
+                                                <div className={`w-14 h-14 shrink-0 rounded-lg bg-slate-950/60 border ${config.border} p-1 flex items-center justify-center`}>
+                                                    <img
+                                                        src={imagePath}
+                                                        alt={eq.name}
+                                                        className="w-full h-full object-contain"
+                                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                                    />
+                                                </div>
+                                            )}
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-1.5">
                                                     <RarityIcon className={`w-4 h-4 shrink-0 ${config.color}`} />
                                                     <h3 className={`font-bold text-sm truncate ${config.color}`}>{eq.name}</h3>
+                                                    <span className={`text-[9px] uppercase tracking-wider font-bold shrink-0 ml-auto ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full`}>
+                                                        {eq.rarity}
+                                                    </span>
                                                 </div>
                                                 <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">{eq.slot}</p>
                                                 <p className="text-xs text-slate-400 mt-1">{eq.description}</p>
                                             </div>
-                                            <span className={`text-[10px] uppercase tracking-wider font-bold shrink-0 ml-2 ${config.color} ${config.bg} px-2 py-0.5 rounded-full`}>
-                                                {eq.rarity}
-                                            </span>
                                         </div>
                                         {isEquipped ? (
                                             <Button size="sm" className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => handleUnequip(ue)}>
