@@ -454,14 +454,92 @@ export async function fetchUserParty(userId: string) {
     }
 }
 
+// --- Raid Boss Pool ---
+
+interface RaidBossTemplate {
+    name: string
+    hp: number
+    shield_type?: 'swift' | 'arcane' | 'iron' | null
+    shield_hp?: number
+    boss_weakness?: 'physical' | 'cardio' | 'magic' | null
+    boss_resistance?: 'physical' | 'cardio' | 'magic' | null
+}
+
+const RAID_BOSS_POOL: RaidBossTemplate[] = [
+    // Tier 1 — No shields, simple
+    { name: 'Goblin Warlord', hp: 50000, boss_weakness: 'physical', boss_resistance: null },
+    { name: 'Skeleton King', hp: 75000, boss_weakness: 'magic', boss_resistance: 'physical' },
+    { name: 'Shadow Stalker', hp: 60000, boss_weakness: 'cardio', boss_resistance: null },
+    { name: 'Dire Wolf Alpha', hp: 40000, boss_weakness: null, boss_resistance: null },
+    { name: 'Cursed Minotaur', hp: 80000, boss_weakness: 'physical', boss_resistance: 'magic' },
+
+    // Tier 2 — Shields
+    { name: 'Iron Golem', hp: 100000, shield_type: 'iron', shield_hp: 25000, boss_weakness: 'magic', boss_resistance: 'physical' },
+    { name: 'Storm Drake', hp: 120000, shield_type: 'swift', shield_hp: 30000, boss_weakness: 'physical', boss_resistance: 'cardio' },
+    { name: 'Arcane Lich', hp: 90000, shield_type: 'arcane', shield_hp: 20000, boss_weakness: 'cardio', boss_resistance: 'magic' },
+    { name: 'Frost Giant', hp: 150000, shield_type: 'iron', shield_hp: 40000, boss_weakness: 'magic', boss_resistance: null },
+    { name: 'Phantom Wraith', hp: 100000, shield_type: 'swift', shield_hp: 25000, boss_weakness: null, boss_resistance: 'physical' },
+
+    // Tier 3 — Tough bosses
+    { name: 'Volcanic Titan', hp: 200000, shield_type: 'iron', shield_hp: 50000, boss_weakness: 'cardio', boss_resistance: 'physical' },
+    { name: 'Abyssal Leviathan', hp: 250000, shield_type: 'arcane', shield_hp: 60000, boss_weakness: 'physical', boss_resistance: 'magic' },
+    { name: 'Celestial Dragon', hp: 300000, shield_type: 'swift', shield_hp: 75000, boss_weakness: 'magic', boss_resistance: 'cardio' },
+    { name: 'The World Eater', hp: 500000, shield_type: 'arcane', shield_hp: 100000, boss_weakness: null, boss_resistance: null },
+    { name: 'Odin\'s Shadow', hp: 350000, shield_type: 'iron', shield_hp: 80000, boss_weakness: 'cardio', boss_resistance: 'magic' },
+]
+
+/**
+ * Spawns a weekly raid boss for a party.
+ * Picks a random boss from the pool, lasts 7 days.
+ */
+async function spawnRaidBoss(partyId: string) {
+    const supabase = createClient()
+    const boss = RAID_BOSS_POOL[Math.floor(Math.random() * RAID_BOSS_POOL.length)]
+    const now = new Date()
+    const endTime = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+
+    const { data, error } = await supabase
+        .from('raids')
+        .insert({
+            party_id: partyId,
+            boss_name: boss.name,
+            boss_max_hp: boss.hp,
+            status: 'active',
+            start_time: now.toISOString(),
+            end_time: endTime.toISOString(),
+            shield_type: boss.shield_type || null,
+            shield_hp: boss.shield_hp || null,
+            shield_hp_current: boss.shield_hp || null,
+            boss_weakness: boss.boss_weakness || null,
+            boss_resistance: boss.boss_resistance || null,
+        })
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error spawning raid boss:', error)
+        return null
+    }
+    return data
+}
+
 export async function fetchActiveRaid(partyId: string) {
     const supabase = createClient()
+
+    // Expire any active raids past their end_time
+    await supabase
+        .from('raids')
+        .update({ status: 'expired' })
+        .eq('party_id', partyId)
+        .eq('status', 'active')
+        .lt('end_time', new Date().toISOString())
+
     const { data, error } = await supabase
         .from('raids')
         .select(`
             *,
             raid_damage (
-                user_id, damage,
+                user_id, damage, damage_type,
                 users (display_name, class_name)
             )
         `)
@@ -469,8 +547,52 @@ export async function fetchActiveRaid(partyId: string) {
         .eq('status', 'active')
         .single()
 
-    if (error) return null
-    return data
+    if (data) return data
+
+    // No active raid — check if we should spawn one
+    // Find the most recent raid for this party
+    const { data: lastRaid } = await supabase
+        .from('raids')
+        .select('end_time, status')
+        .eq('party_id', partyId)
+        .order('end_time', { ascending: false })
+        .limit(1)
+        .single()
+
+    let shouldSpawn = false
+
+    if (!lastRaid) {
+        // No raids ever — spawn the first one
+        shouldSpawn = true
+    } else {
+        // Spawn if 24 hours have passed since the last raid ended
+        const lastEnd = new Date(lastRaid.end_time)
+        const hoursSinceEnd = (Date.now() - lastEnd.getTime()) / (1000 * 60 * 60)
+        if (hoursSinceEnd >= 24) {
+            shouldSpawn = true
+        }
+    }
+
+    if (shouldSpawn) {
+        const newRaid = await spawnRaidBoss(partyId)
+        if (newRaid) {
+            // Re-fetch with full relations
+            const { data: fullRaid } = await supabase
+                .from('raids')
+                .select(`
+                    *,
+                    raid_damage (
+                        user_id, damage, damage_type,
+                        users (display_name, class_name)
+                    )
+                `)
+                .eq('id', newRaid.id)
+                .single()
+            return fullRaid
+        }
+    }
+
+    return null
 }
 
 /**
