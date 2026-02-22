@@ -176,3 +176,44 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+/* --- Dark Fantasy Atmosphere --- */
+
+@keyframes ember-float {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(30px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes ember-float-alt {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  85% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(-20px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes ember-glow {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(251, 146, 60, 0.4); }
+  50% { box-shadow: 0 0 8px 2px rgba(251, 146, 60, 0.7); }
+}
