@@ -66,6 +66,70 @@ const WEEKLY_QUEST_POOL: QuestTemplate[] = [
     { id: 'w-weekend', title: 'Weekend Warrior', description: 'Log a workout on Saturday or Sunday.', type: 'weekly', condition: 'weekly_weekend_workout', total: 1, reward: 75 },
 ]
 
+// --- Bounty System (Adventurer's Guild) ---
+
+type BountyCondition =
+    | 'bounty_volume_single_session'
+    | 'bounty_sets_in_session'
+    | 'bounty_cardio_minutes'
+    | 'bounty_recovery_minutes'
+    | 'bounty_mixed_session'
+    | 'bounty_high_rpe_cardio'
+    | 'bounty_morning_workout'
+    | 'bounty_unique_exercises'
+
+interface BountyTemplate {
+    id: string
+    title: string
+    description: string
+    condition: BountyCondition
+    total: number
+    rewardXP: number
+    rewardScraps: number
+}
+
+const BOUNTY_POOL: BountyTemplate[] = [
+    { id: 'b-boulder', title: 'Lift the Boulder', description: 'Lift 10,000 lbs total volume in one session.', condition: 'bounty_volume_single_session', total: 10000, rewardXP: 300, rewardScraps: 50 },
+    { id: 'b-forge', title: 'The Forge', description: 'Complete 20 sets of strength exercises today.', condition: 'bounty_sets_in_session', total: 20, rewardXP: 250, rewardScraps: 40 },
+    { id: 'b-anvil', title: 'Anvil Strike', description: 'Lift 5,000 lbs in one session.', condition: 'bounty_volume_single_session', total: 5000, rewardXP: 200, rewardScraps: 30 },
+    { id: 'b-colossus', title: 'Colossus', description: 'Lift 20,000 lbs total volume in one session.', condition: 'bounty_volume_single_session', total: 20000, rewardXP: 500, rewardScraps: 100 },
+    { id: 'b-iron-rain', title: 'Iron Rain', description: 'Complete 25 sets in one session.', condition: 'bounty_sets_in_session', total: 25, rewardXP: 300, rewardScraps: 50 },
+    { id: 'b-goblin', title: 'The Goblin Tunnels', description: 'Log 30 minutes of cardio today.', condition: 'bounty_cardio_minutes', total: 30, rewardXP: 300, rewardScraps: 50 },
+    { id: 'b-wind-sprint', title: 'Wind Sprint', description: 'Log a cardio session at RPE 9+.', condition: 'bounty_high_rpe_cardio', total: 1, rewardXP: 250, rewardScraps: 40 },
+    { id: 'b-marathon', title: 'Marathon Runner', description: 'Log 60 minutes of cardio today.', condition: 'bounty_cardio_minutes', total: 60, rewardXP: 400, rewardScraps: 75 },
+    { id: 'b-chase', title: 'The Chase', description: 'Log 15 minutes of cardio today.', condition: 'bounty_cardio_minutes', total: 15, rewardXP: 150, rewardScraps: 25 },
+    { id: 'b-meditate', title: 'Meditate', description: 'Log 15 minutes of recovery work.', condition: 'bounty_recovery_minutes', total: 15, rewardXP: 200, rewardScraps: 30 },
+    { id: 'b-inner-peace', title: 'Inner Peace', description: 'Log 30 minutes of yoga or stretching.', condition: 'bounty_recovery_minutes', total: 30, rewardXP: 300, rewardScraps: 50 },
+    { id: 'b-healing', title: 'The Healing Springs', description: 'Log 45 minutes of recovery work.', condition: 'bounty_recovery_minutes', total: 45, rewardXP: 350, rewardScraps: 60 },
+    { id: 'b-spectrum', title: 'Full Spectrum', description: 'Log both strength and cardio in one session.', condition: 'bounty_mixed_session', total: 1, rewardXP: 350, rewardScraps: 60 },
+    { id: 'b-gauntlet', title: 'The Gauntlet', description: 'Complete 30 sets in one session.', condition: 'bounty_sets_in_session', total: 30, rewardXP: 400, rewardScraps: 75 },
+    { id: 'b-dawn', title: 'Dawn Patrol', description: 'Log a workout before 8 AM.', condition: 'bounty_morning_workout', total: 1, rewardXP: 200, rewardScraps: 50 },
+    { id: 'b-explorer', title: 'The Explorer', description: 'Use 5 different exercises in one session.', condition: 'bounty_unique_exercises', total: 5, rewardXP: 250, rewardScraps: 40 },
+    { id: 'b-scholar', title: 'The Scholar', description: 'Use 8 different exercises in one session.', condition: 'bounty_unique_exercises', total: 8, rewardXP: 400, rewardScraps: 75 },
+    { id: 'b-juggernaut', title: 'Juggernaut', description: 'Complete 15 sets in one session.', condition: 'bounty_sets_in_session', total: 15, rewardXP: 200, rewardScraps: 30 },
+    { id: 'b-berserker', title: 'Berserker', description: 'Lift 15,000 lbs in one session.', condition: 'bounty_volume_single_session', total: 15000, rewardXP: 400, rewardScraps: 75 },
+    { id: 'b-warmup', title: 'Proper Warmup', description: 'Log 10 minutes of recovery work.', condition: 'bounty_recovery_minutes', total: 10, rewardXP: 150, rewardScraps: 20 },
+    { id: 'b-endurance', title: 'Endurance Test', description: 'Log 45 minutes of cardio.', condition: 'bounty_cardio_minutes', total: 45, rewardXP: 350, rewardScraps: 60 },
+    { id: 'b-variety', title: 'Variety Pack', description: 'Use 6 different exercises in one session.', condition: 'bounty_unique_exercises', total: 6, rewardXP: 300, rewardScraps: 50 },
+    { id: 'b-titan', title: 'Titan Training', description: 'Lift 25,000 lbs in one session.', condition: 'bounty_volume_single_session', total: 25000, rewardXP: 600, rewardScraps: 125 },
+    { id: 'b-quickdraw', title: 'Quick Draw', description: 'Complete 10 sets in one session.', condition: 'bounty_sets_in_session', total: 10, rewardXP: 150, rewardScraps: 25 },
+    { id: 'b-sprint', title: 'Sprint Session', description: 'Log 10 minutes of cardio.', condition: 'bounty_cardio_minutes', total: 10, rewardXP: 150, rewardScraps: 25 },
+    { id: 'b-double-down', title: 'Double Down', description: 'Lift 7,500 lbs in one session.', condition: 'bounty_volume_single_session', total: 7500, rewardXP: 250, rewardScraps: 40 },
+    { id: 'b-zen', title: 'Zen Master', description: 'Log 20 minutes of recovery work.', condition: 'bounty_recovery_minutes', total: 20, rewardXP: 250, rewardScraps: 35 },
+    { id: 'b-allrounder', title: 'All-Rounder', description: 'Use 4 different exercises in one session.', condition: 'bounty_unique_exercises', total: 4, rewardXP: 200, rewardScraps: 30 },
+]
+
+export type Bounty = {
+    id: string
+    title: string
+    description: string
+    progress: number
+    total: number
+    rewardXP: number
+    rewardScraps: number
+    completed: boolean
+}
+
 /** Simple deterministic hash to pick quests from pool */
 function seedHash(str: string): number {
     let hash = 0
@@ -91,6 +155,90 @@ function pickFromPool<T>(pool: T[], count: number, seed: number): T[] {
         attempt = seedHash(attempt.toString() + 'x')
     }
     return picked
+}
+
+export async function fetchActiveBounties(userId: string): Promise<Bounty[]> {
+    const supabase = createClient()
+    const now = new Date()
+    const dateStr = now.toISOString().split('T')[0]
+    const bountySeed = seedHash(userId + dateStr + 'bounty')
+    const selectedBounties = pickFromPool(BOUNTY_POOL, 2, bountySeed)
+
+    const startOfDay = new Date(now)
+    startOfDay.setHours(0, 0, 0, 0)
+
+    const { data: todayWorkouts } = await supabase
+        .from('workouts')
+        .select('id, total_volume, start_time, workout_sets(id, weight, reps, rpe, exercise_id, exercises(exercise_type, name))')
+        .eq('user_id', userId)
+        .gte('start_time', startOfDay.toISOString())
+
+    let maxSessionVolume = 0
+    let maxSessionSets = 0
+    let totalCardioMinutes = 0
+    let totalRecoveryMinutes = 0
+    let hasHighRPECardio = false
+    let hasMixedSession = false
+    let hasMorningWorkout = false
+    let maxUniqueExercises = 0
+
+    for (const workout of (todayWorkouts || [])) {
+        const sets = (workout.workout_sets || []) as any[]
+        let sessionVolume = 0
+        let sessionHasStrength = false
+        let sessionHasCardio = false
+        const exerciseNames = new Set<string>()
+
+        for (const set of sets) {
+            const exType = set.exercises?.exercise_type || 'Strength'
+            exerciseNames.add(set.exercises?.name || '')
+
+            if (exType === 'Strength') {
+                sessionVolume += (Number(set.weight) || 0) * (Number(set.reps) || 0)
+                sessionHasStrength = true
+            } else if (exType === 'Recovery') {
+                totalRecoveryMinutes += Number(set.reps) || 0
+            } else {
+                totalCardioMinutes += Number(set.reps) || 0
+                sessionHasCardio = true
+                if ((Number(set.rpe) || 0) >= 9) hasHighRPECardio = true
+            }
+        }
+
+        maxSessionVolume = Math.max(maxSessionVolume, sessionVolume)
+        maxSessionSets = Math.max(maxSessionSets, sets.length)
+        maxUniqueExercises = Math.max(maxUniqueExercises, exerciseNames.size)
+        if (sessionHasStrength && sessionHasCardio) hasMixedSession = true
+        if (workout.start_time) {
+            const hour = new Date(workout.start_time).getHours()
+            if (hour < 8) hasMorningWorkout = true
+        }
+    }
+
+    const conditionValues: Record<BountyCondition, number> = {
+        bounty_volume_single_session: maxSessionVolume,
+        bounty_sets_in_session: maxSessionSets,
+        bounty_cardio_minutes: totalCardioMinutes,
+        bounty_recovery_minutes: totalRecoveryMinutes,
+        bounty_mixed_session: hasMixedSession ? 1 : 0,
+        bounty_high_rpe_cardio: hasHighRPECardio ? 1 : 0,
+        bounty_morning_workout: hasMorningWorkout ? 1 : 0,
+        bounty_unique_exercises: maxUniqueExercises,
+    }
+
+    return selectedBounties.map(template => {
+        const progress = Math.min(conditionValues[template.condition] || 0, template.total)
+        return {
+            id: template.id,
+            title: template.title,
+            description: template.description,
+            progress,
+            total: template.total,
+            rewardXP: template.rewardXP,
+            rewardScraps: template.rewardScraps,
+            completed: progress >= template.total,
+        }
+    })
 }
 
 export async function fetchRecentActivity(userId: string): Promise<WorkoutActivity[]> {

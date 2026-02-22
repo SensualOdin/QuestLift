@@ -1,6 +1,7 @@
 import { UserProfile } from "@/components/dashboard/user-profile"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { ActiveQuests } from "@/components/dashboard/active-quests"
+import { AdventurersGuild } from "@/components/dashboard/adventurers-guild"
 import { OnboardingCheck } from "@/components/dashboard/onboarding-check"
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
         </div>
         <div className="lg:col-span-2 space-y-6 sm:space-y-8">
           <ActiveQuests />
+          <AdventurersGuild />
           <RecentActivity />
         </div>
       </div>
