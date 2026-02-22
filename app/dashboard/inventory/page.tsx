@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Package, Sword, Shield, Gem, Sparkles, Crown, Star, Coins, Gift } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -27,6 +28,7 @@ export default function InventoryPage() {
     const [lootBoxes, setLootBoxes] = useState<LootBox[]>([])
     const [loading, setLoading] = useState(true)
     const [openedItem, setOpenedItem] = useState<Equipment | null>(null)
+    const [openingBoxId, setOpeningBoxId] = useState<string | null>(null)
 
     useEffect(() => {
         const init = async () => {
@@ -64,8 +66,11 @@ export default function InventoryPage() {
     }
 
     const handleOpenLootBox = async (lb: LootBox) => {
-        if (!user) return
+        if (!user || openingBoxId) return
+        setOpeningBoxId(lb.id)
+        await new Promise(r => setTimeout(r, 600))
         const gear = await openLootBox(user.id, lb.id)
+        setOpeningBoxId(null)
         if (gear) {
             setOpenedItem(gear)
             setLootBoxes(prev => prev.map(b => b.id === lb.id ? { ...b, opened: true } : b))
@@ -111,13 +116,31 @@ export default function InventoryPage() {
             </div>
 
             {/* Opened loot reveal */}
-            {openedItem && (
-                <div className={`rounded-xl border p-4 text-center animate-pulse ${RARITY_CONFIG[openedItem.rarity]?.border || 'border-slate-700'} ${RARITY_CONFIG[openedItem.rarity]?.bg || ''}`}>
-                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">You received</p>
-                    <p className={`text-lg font-bold ${RARITY_CONFIG[openedItem.rarity]?.color || 'text-white'}`}>{openedItem.name}</p>
-                    <p className="text-xs text-slate-400 mt-1">{openedItem.description}</p>
-                </div>
-            )}
+            <AnimatePresence>
+                {openedItem && (
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className={`relative rounded-xl border p-4 text-center overflow-hidden ${RARITY_CONFIG[openedItem.rarity]?.border || 'border-slate-700'} ${RARITY_CONFIG[openedItem.rarity]?.bg || ''}`}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0.8, scale: 1.2 }}
+                            animate={{ opacity: 0, scale: 1.5 }}
+                            transition={{ duration: 0.8 }}
+                            className={`absolute inset-0 rounded-xl blur-xl ${
+                                openedItem.rarity === 'legendary' ? 'bg-yellow-500/30' :
+                                openedItem.rarity === 'epic' ? 'bg-purple-500/30' :
+                                openedItem.rarity === 'rare' ? 'bg-blue-500/30' : 'bg-slate-500/20'
+                            }`}
+                        />
+                        <p className="text-xs text-slate-400 uppercase tracking-wider mb-1 relative z-10 font-cinzel">You received</p>
+                        <p className={`text-lg font-bold relative z-10 font-cinzel ${RARITY_CONFIG[openedItem.rarity]?.color || 'text-white'}`}>{openedItem.name}</p>
+                        <p className="text-xs text-slate-400 mt-1 relative z-10">{openedItem.description}</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Equipment Slots */}
             <div className="space-y-3">
@@ -157,15 +180,21 @@ export default function InventoryPage() {
                     <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1 font-cinzel">Loot Boxes</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {unopenedBoxes.map(lb => (
-                            <Card key={lb.id} className="border-yellow-500/30 bg-yellow-400/5">
-                                <CardContent className="p-4 text-center space-y-2">
-                                    <Gift className="w-8 h-8 mx-auto text-yellow-400" />
-                                    <p className="text-sm font-bold text-yellow-400">Raid Loot Box</p>
-                                    <Button size="sm" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white" onClick={() => handleOpenLootBox(lb)}>
-                                        Open
-                                    </Button>
-                                </CardContent>
-                            </Card>
+                            <motion.div
+                                key={lb.id}
+                                animate={openingBoxId === lb.id ? { x: [0, -4, 4, -4, 4, -2, 2, 0] } : {}}
+                                transition={{ duration: 0.5 }}
+                            >
+                                <Card className="border-yellow-500/30 bg-yellow-400/5">
+                                    <CardContent className="p-4 text-center space-y-2">
+                                        <Gift className="w-8 h-8 mx-auto text-yellow-400" />
+                                        <p className="text-sm font-bold text-yellow-400 font-cinzel">Raid Loot Box</p>
+                                        <Button size="sm" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white" onClick={() => handleOpenLootBox(lb)}>
+                                            Open
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
                         ))}
                     </div>
                 </div>
