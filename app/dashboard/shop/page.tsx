@@ -379,10 +379,10 @@ function renderEquipmentCard(
     const imagePath = getEquipmentImagePath(eq.name, eq.slot)
 
     return (
-        <Card key={eq.id} className={`${config.border} ${config.glow} bg-slate-900/40 overflow-hidden`}>
-            <CardContent className="p-4 space-y-3">
+        <Card key={eq.id} className={`${config.border} ${config.glow} bg-slate-900/40 overflow-hidden h-full`}>
+            <CardContent className="p-4 h-full flex flex-col">
                 {imagePath && (
-                    <div className="flex justify-center">
+                    <div className="flex justify-center mb-3">
                         <div className={`w-20 h-20 rounded-lg bg-slate-950/60 border ${config.border} p-1.5 flex items-center justify-center`}>
                             <img
                                 src={imagePath}
@@ -394,7 +394,7 @@ function renderEquipmentCard(
                     </div>
                 )}
 
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                             <RarityIcon className={`w-4 h-4 flex-shrink-0 ${config.color}`} />
@@ -407,21 +407,23 @@ function renderEquipmentCard(
                     </span>
                 </div>
 
-                {owned ? (
-                    <Button variant="outline" className="w-full border-slate-700 text-slate-400" size="sm" disabled>
-                        <Check className="w-4 h-4 mr-1" /> Owned
-                    </Button>
-                ) : (
-                    <Button
-                        onClick={() => onBuy(eq)}
-                        disabled={balance < eq.cost || purchasing === eq.id}
-                        className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
-                        size="sm"
-                    >
-                        <Coins className="w-4 h-4 mr-1" />
-                        {purchasing === eq.id ? 'Buying...' : `${eq.cost.toLocaleString()} Scraps`}
-                    </Button>
-                )}
+                <div className="mt-auto">
+                    {owned ? (
+                        <Button variant="outline" className="w-full border-slate-700 text-slate-400" size="sm" disabled>
+                            <Check className="w-4 h-4 mr-1" /> Owned
+                        </Button>
+                    ) : (
+                        <Button
+                            onClick={() => onBuy(eq)}
+                            disabled={balance < eq.cost || purchasing === eq.id}
+                            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+                            size="sm"
+                        >
+                            <Coins className="w-4 h-4 mr-1" />
+                            {purchasing === eq.id ? 'Buying...' : `${eq.cost.toLocaleString()} Scraps`}
+                        </Button>
+                    )}
+                </div>
             </CardContent>
         </Card>
     )
