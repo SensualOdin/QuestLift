@@ -9,6 +9,7 @@ export interface Achievement {
     condition_type: string
     condition_value: number
     reward_scraps: number
+    reward_title?: string
 }
 
 export interface UserAchievement {
@@ -56,7 +57,7 @@ export async function checkAndAwardAchievements(
     // Fetch user stats
     const { data: user } = await supabase
         .from('users')
-        .select('level, class_name, iron_scraps')
+        .select('level, class_name, iron_scraps, str_volume_lifetime, dex_minutes_lifetime, con_sets_lifetime, wis_minutes_lifetime, best_streak')
         .eq('id', userId)
         .single()
 
@@ -91,6 +92,11 @@ export async function checkAndAwardAchievements(
         streak_days: streak,
         total_volume_single: sessionContext?.sessionVolume || 0,
         comeback_triggered: sessionContext?.isComebackQuest ? 1 : 0,
+        str_volume_lifetime: (user as any).str_volume_lifetime || 0,
+        dex_minutes_lifetime: (user as any).dex_minutes_lifetime || 0,
+        wis_minutes_lifetime: (user as any).wis_minutes_lifetime || 0,
+        con_sets_lifetime: (user as any).con_sets_lifetime || 0,
+        workout_streak_ever: (user as any).best_streak || 0,
     }
 
     // Check each unearned achievement

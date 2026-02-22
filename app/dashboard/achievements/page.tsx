@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trophy, Sword, Shield, Flame, Star, Users, Dumbbell, Swords, RefreshCcw, Lock, Coins } from "lucide-react"
+import { Trophy, Sword, Shield, Flame, Star, Users, Dumbbell, Swords, RefreshCcw, Lock, Coins, Crown, Timer, Wind, Brain, Layers, Calendar } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { fetchAllAchievements, type Achievement } from "@/lib/achievements"
+import { createClient } from "@/lib/supabase/client"
 import { Skeleton } from "@/components/ui/skeleton"
 
 const ICON_MAP: Record<string, typeof Trophy> = {
@@ -17,6 +18,12 @@ const ICON_MAP: Record<string, typeof Trophy> = {
     dumbbell: Dumbbell,
     swords: Swords,
     'refresh-ccw': RefreshCcw,
+    crown: Crown,
+    timer: Timer,
+    wind: Wind,
+    brain: Brain,
+    layers: Layers,
+    calendar: Calendar,
 }
 
 const CATEGORY_CONFIG: Record<string, { color: string, bg: string, border: string }> = {
@@ -31,6 +38,8 @@ export default function AchievementsPage() {
     const [achievements, setAchievements] = useState<Achievement[]>([])
     const [earned, setEarned] = useState<Set<string>>(new Set())
     const [loading, setLoading] = useState(true)
+    const [filter, setFilter] = useState<'all' | 'prestige'>('all')
+    const [equippingId, setEquippingId] = useState<string | null>(null)
 
     useEffect(() => {
         const load = async () => {
@@ -46,6 +55,20 @@ export default function AchievementsPage() {
     const earnedCount = earned.size
     const totalCount = achievements.length
 
+    const handleEquipTitle = async (achievement: Achievement) => {
+        if (!user?.id) return
+        setEquippingId(achievement.id)
+        try {
+            const supabase = createClient()
+            await supabase
+                .from('users')
+                .update({ equipped_title: (achievement as any).reward_title })
+                .eq('id', user.id)
+        } finally {
+            setEquippingId(null)
+        }
+    }
+
     if (loading) {
         return (
             <div className="mx-auto max-w-6xl p-4 md:p-8 space-y-6">
@@ -59,8 +82,13 @@ export default function AchievementsPage() {
         )
     }
 
+    // Filter achievements based on selected filter
+    const filteredAchievements = filter === 'prestige'
+        ? achievements.filter(a => !!(a as any).reward_title)
+        : achievements
+
     // Group by category
-    const grouped = achievements.reduce<Record<string, Achievement[]>>((acc, a) => {
+    const grouped = filteredAchievements.reduce<Record<string, Achievement[]>>((acc, a) => {
         const cat = a.category || 'workout'
         if (!acc[cat]) acc[cat] = []
         acc[cat].push(a)
@@ -101,6 +129,22 @@ export default function AchievementsPage() {
                 />
             </div>
 
+            {/* Filter buttons */}
+            <div className="flex gap-2">
+                <button
+                    onClick={() => setFilter('all')}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${filter === 'all' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                    All
+                </button>
+                <button
+                    onClick={() => setFilter('prestige')}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${filter === 'prestige' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                    Prestige
+                </button>
+            </div>
+
             {/* Achievements by category */}
             {Object.entries(grouped).map(([category, achs]) => {
                 const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.workout
@@ -113,14 +157,18 @@ export default function AchievementsPage() {
                             {achs.map(achievement => {
                                 const isEarned = earned.has(achievement.id)
                                 const Icon = ICON_MAP[achievement.icon] || Trophy
+                                const hasRewardTitle = !!(achievement as any).reward_title
+                                const isPrestige = hasRewardTitle
 
                                 return (
                                     <Card
                                         key={achievement.id}
                                         className={`border transition-all ${
-                                            isEarned
-                                                ? `${config.border} bg-slate-900/60 shadow-lg`
-                                                : 'border-slate-800/40 bg-slate-950/40 opacity-60'
+                                            isEarned && isPrestige
+                                                ? `${config.border} bg-slate-900/60 shadow-lg shadow-[0_0_15px_rgba(234,179,8,0.3)]`
+                                                : isEarned
+                                                    ? `${config.border} bg-slate-900/60 shadow-lg`
+                                                    : 'border-slate-800/40 bg-slate-950/40 opacity-60'
                                         }`}
                                     >
                                         <CardContent className="p-4">
@@ -148,6 +196,21 @@ export default function AchievementsPage() {
                                                         <p className={`text-xs font-medium mt-2 flex items-center gap-1 ${isEarned ? 'text-amber-400' : 'text-slate-600'}`}>
                                                             <Coins className="w-3 h-3" /> {isEarned ? '+' : ''}{achievement.reward_scraps} Iron Scraps
                                                         </p>
+                                                    )}
+                                                    {hasRewardTitle && (
+                                                        <div className="mt-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-1 inline-flex items-center gap-1">
+                                                            <Crown className="w-3 h-3 text-yellow-400" />
+                                                            <span className="text-xs font-bold text-yellow-400">Title: {(achievement as any).reward_title}</span>
+                                                        </div>
+                                                    )}
+                                                    {isEarned && hasRewardTitle && (
+                                                        <button
+                                                            onClick={() => handleEquipTitle(achievement)}
+                                                            disabled={equippingId === achievement.id}
+                                                            className="mt-2 block px-3 py-1 rounded-lg text-xs font-semibold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/30 transition-colors disabled:opacity-50"
+                                                        >
+                                                            {equippingId === achievement.id ? 'Equipping...' : 'Equip Title'}
+                                                        </button>
                                                     )}
                                                 </div>
                                             </div>

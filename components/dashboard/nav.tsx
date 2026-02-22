@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Dumbbell, Clock, Users, ShoppingBag, Package } from "lucide-react"
+import { Home, Dumbbell, Users, ShoppingBag, Package, GitBranch } from "lucide-react"
 import { motion } from "framer-motion"
 
 export function MainNav() {
@@ -11,8 +11,8 @@ export function MainNav() {
     const navItems = [
         { href: "/dashboard", label: "Inn", icon: Home },
         { href: "/dashboard/workout", label: "Workout", icon: Dumbbell },
-        { href: "/dashboard/history", label: "History", icon: Clock },
         { href: "/dashboard/inventory", label: "Gear", icon: Package },
+        { href: "/dashboard/skills", label: "Skills", icon: GitBranch },
         { href: "/dashboard/shop", label: "Shop", icon: ShoppingBag },
         { href: "/dashboard/party", label: "Party", icon: Users },
     ]

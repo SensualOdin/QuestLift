@@ -25,6 +25,7 @@ export type Database = {
           id: string
           name: string
           reward_scraps: number | null
+          reward_title: string | null
         }
         Insert: {
           category: string
@@ -36,6 +37,7 @@ export type Database = {
           id?: string
           name: string
           reward_scraps?: number | null
+          reward_title?: string | null
         }
         Update: {
           category?: string
@@ -47,6 +49,49 @@ export type Database = {
           id?: string
           name?: string
           reward_scraps?: number | null
+          reward_title?: string | null
+        }
+        Relationships: []
+      }
+      equipment: {
+        Row: {
+          cost: number | null
+          created_at: string
+          description: string
+          effect_target: string | null
+          effect_type: string
+          effect_value: number
+          icon: string
+          id: string
+          name: string
+          rarity: string
+          slot: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          description: string
+          effect_target?: string | null
+          effect_type: string
+          effect_value?: number
+          icon?: string
+          id?: string
+          name: string
+          rarity?: string
+          slot: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          description?: string
+          effect_target?: string | null
+          effect_type?: string
+          effect_value?: number
+          icon?: string
+          id?: string
+          name?: string
+          rarity?: string
+          slot?: string
         }
         Relationships: []
       }
@@ -76,6 +121,71 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      loot_box_contents: {
+        Row: {
+          equipment_id: string
+          id: string
+          loot_box_id: string
+        }
+        Insert: {
+          equipment_id: string
+          id?: string
+          loot_box_id: string
+        }
+        Update: {
+          equipment_id?: string
+          id?: string
+          loot_box_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loot_box_contents_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loot_box_contents_loot_box_id_fkey"
+            columns: ["loot_box_id"]
+            isOneToOne: false
+            referencedRelation: "loot_boxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loot_boxes: {
+        Row: {
+          created_at: string
+          id: string
+          opened: boolean | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opened?: boolean | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opened?: boolean | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loot_boxes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parties: {
         Row: {
@@ -184,7 +294,7 @@ export type Database = {
         Row: {
           created_at: string
           damage: number
-          damage_type: string
+          damage_type: string | null
           id: string
           raid_id: string
           user_id: string
@@ -193,7 +303,7 @@ export type Database = {
         Insert: {
           created_at?: string
           damage: number
-          damage_type?: string
+          damage_type?: string | null
           id?: string
           raid_id: string
           user_id: string
@@ -202,7 +312,7 @@ export type Database = {
         Update: {
           created_at?: string
           damage?: number
-          damage_type?: string
+          damage_type?: string | null
           id?: string
           raid_id?: string
           user_id?: string
@@ -376,6 +486,48 @@ export type Database = {
         }
         Relationships: []
       }
+      skill_tree_nodes: {
+        Row: {
+          branch: string
+          class_name: string
+          created_at: string
+          description: string
+          effect_target: string | null
+          effect_type: string
+          effect_value: number
+          icon: string
+          id: string
+          name: string
+          tier: number
+        }
+        Insert: {
+          branch: string
+          class_name: string
+          created_at?: string
+          description: string
+          effect_target?: string | null
+          effect_type: string
+          effect_value?: number
+          icon?: string
+          id?: string
+          name: string
+          tier: number
+        }
+        Update: {
+          branch?: string
+          class_name?: string
+          created_at?: string
+          description?: string
+          effect_target?: string | null
+          effect_type?: string
+          effect_value?: number
+          icon?: string
+          id?: string
+          name?: string
+          tier?: number
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -402,6 +554,48 @@ export type Database = {
           },
           {
             foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_equipment: {
+        Row: {
+          equipment_id: string
+          equipped_slot: string | null
+          id: string
+          obtained_at: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          equipment_id: string
+          equipped_slot?: string | null
+          id?: string
+          obtained_at?: string
+          source?: string
+          user_id: string
+        }
+        Update: {
+          equipment_id?: string
+          equipped_slot?: string | null
+          id?: string
+          obtained_at?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_equipment_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_equipment_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -445,9 +639,46 @@ export type Database = {
           },
         ]
       }
+      user_skill_points: {
+        Row: {
+          allocated_at: string
+          id: string
+          node_id: string
+          user_id: string
+        }
+        Insert: {
+          allocated_at?: string
+          id?: string
+          node_id: string
+          user_id: string
+        }
+        Update: {
+          allocated_at?: string
+          id?: string
+          node_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_skill_points_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "skill_tree_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_skill_points_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           avatar_url: string | null
+          best_streak: number | null
           class_name: string | null
           con_sets_lifetime: number | null
           created_at: string
@@ -466,6 +697,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          best_streak?: number | null
           class_name?: string | null
           con_sets_lifetime?: number | null
           created_at?: string
@@ -484,6 +716,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          best_streak?: number | null
           class_name?: string | null
           con_sets_lifetime?: number | null
           created_at?: string

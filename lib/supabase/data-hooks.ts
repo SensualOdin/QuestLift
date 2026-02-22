@@ -840,7 +840,7 @@ export async function saveWorkoutSession(
     // Fetch current user data to compute new level + streak
     const { data: currentUser } = await supabase
         .from('users')
-        .select('xp_current, level, str_volume_lifetime, dex_minutes_lifetime, con_sets_lifetime, wis_minutes_lifetime, current_streak, last_workout_date, iron_scraps')
+        .select('xp_current, level, str_volume_lifetime, dex_minutes_lifetime, con_sets_lifetime, wis_minutes_lifetime, current_streak, last_workout_date, iron_scraps, best_streak')
         .eq('id', userId)
         .single()
 
@@ -880,6 +880,7 @@ export async function saveWorkoutSession(
         }
 
         streakCount = newStreak
+        const newBestStreak = Math.max(newStreak, (currentUser as any).best_streak || 0)
 
         // --- Iron Scraps: earn 10 per workout + 5 per streak day (bonus) ---
         ironScrapsEarned = 10 + Math.min(newStreak, 10) * 5
@@ -897,6 +898,7 @@ export async function saveWorkoutSession(
                 con_sets_lifetime: newConSets,
                 wis_minutes_lifetime: newWisMinutes,
                 current_streak: newStreak,
+                best_streak: newBestStreak,
                 last_workout_date: today,
                 iron_scraps: (currentUser.iron_scraps || 0) + ironScrapsEarned,
             })
@@ -1252,4 +1254,100 @@ export async function getEquippedEffects(userId: string) {
         }
     }
     return effects
+}
+
+// --- Skill Tree System ---
+
+/**
+ * Calculates how many skill points a user has earned based on level.
+ * 1 point at levels: 10, 15, 20, 25, 30, 35, 40, 45, 50, then every 10 after.
+ */
+export function getAvailableSkillPoints(level: number): number {
+    const milestones = [10, 15, 20, 25, 30, 35, 40, 45, 50]
+    let points = milestones.filter(m => level >= m).length
+    if (level > 50) {
+        points += Math.floor((level - 50) / 10)
+    }
+    return points
+}
+
+/**
+ * Fetches skill tree nodes for a class and user's allocated points.
+ */
+export async function fetchSkillTree(userId: string, className: string) {
+    const supabase = createClient()
+
+    const [{ data: nodes }, { data: allocated }] = await Promise.all([
+        (supabase as any).from('skill_tree_nodes').select('*').eq('class_name', className).order('branch').order('tier'),
+        (supabase as any).from('user_skill_points').select('node_id').eq('user_id', userId),
+    ])
+
+    const allocatedIds = new Set<string>((allocated || []).map((a: any) => a.node_id as string))
+
+    return {
+        nodes: nodes || [],
+        allocatedIds,
+        totalAllocated: allocatedIds.size,
+    }
+}
+
+/**
+ * Allocates a skill point to a node (validates prerequisites).
+ */
+export async function allocateSkillPoint(userId: string, nodeId: string, className: string): Promise<{ success: boolean, error?: string }> {
+    const supabase = createClient()
+
+    // Fetch user level
+    const { data: userData } = await supabase.from('users').select('level').eq('id', userId).single()
+    if (!userData) return { success: false, error: 'User not found' }
+
+    // Check available points
+    const available = getAvailableSkillPoints(userData.level || 1)
+    const { count: usedPoints } = await (supabase as any)
+        .from('user_skill_points')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+
+    if ((usedPoints || 0) >= available) return { success: false, error: 'No skill points available' }
+
+    // Get the target node
+    const { data: targetNode } = await (supabase as any)
+        .from('skill_tree_nodes')
+        .select('*')
+        .eq('id', nodeId)
+        .single()
+
+    if (!targetNode) return { success: false, error: 'Node not found' }
+    if (targetNode.class_name !== className) return { success: false, error: 'Wrong class' }
+
+    // Check prerequisite: must have tier N-1 in same branch
+    if (targetNode.tier > 1) {
+        const { data: prereqNode } = await (supabase as any)
+            .from('skill_tree_nodes')
+            .select('id')
+            .eq('class_name', className)
+            .eq('branch', targetNode.branch)
+            .eq('tier', targetNode.tier - 1)
+            .single()
+
+        if (prereqNode) {
+            const { count: hasPrereq } = await (supabase as any)
+                .from('user_skill_points')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .eq('node_id', prereqNode.id)
+
+            if (!hasPrereq || hasPrereq === 0) {
+                return { success: false, error: 'Prerequisite not met — unlock the previous tier first' }
+            }
+        }
+    }
+
+    // Allocate
+    const { error } = await (supabase as any)
+        .from('user_skill_points')
+        .insert({ user_id: userId, node_id: nodeId })
+
+    if (error) return { success: false, error: 'Already allocated or error' }
+    return { success: true }
 }
