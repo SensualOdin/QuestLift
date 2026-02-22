@@ -100,7 +100,7 @@ export function RaidBoss() {
             <CardHeader className="relative z-10 border-b border-red-900/30">
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400 font-serif tracking-wide">
+                        <CardTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400 font-cinzel tracking-wide">
                             {raid.boss_name || "Unknown Entity"}
                         </CardTitle>
                         <p className="text-xs text-red-400 flex items-center gap-1 mt-1 font-mono uppercase tracking-widest">

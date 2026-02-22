@@ -194,7 +194,7 @@ export default function SkillTreePage() {
         <div className="max-w-4xl mx-auto px-4 pb-28 sm:pb-8">
             {/* Header */}
             <div className="mb-6">
-                <h1 className={`text-2xl font-bold ${colors.text} mb-1`}>
+                <h1 className={`text-2xl font-bold ${colors.text} mb-1 font-cinzel`}>
                     {className} Skill Tree
                 </h1>
                 <p className="text-slate-400 text-sm">

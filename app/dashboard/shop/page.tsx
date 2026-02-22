@@ -162,8 +162,8 @@ export default function ShopPage() {
             {/* Header with balance */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                        <ShoppingBag className="w-6 h-6 text-indigo-400" /> Shop
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2 font-cinzel">
+                        <ShoppingBag className="w-6 h-6 text-amber-400" /> Shop
                     </h1>
                     <p className="text-sm text-slate-500 mt-1">Spend your hard-earned Iron Scraps</p>
                 </div>
@@ -224,7 +224,7 @@ export default function ShopPage() {
                                 { label: 'Accessories', items: accessories, slotIcon: Gem },
                             ].map(section => (
                                 <div key={section.label} className="space-y-3">
-                                    <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1">
+                                    <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1 font-cinzel">
                                         <section.slotIcon className="w-3.5 h-3.5" /> {section.label}
                                     </h2>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -237,7 +237,7 @@ export default function ShopPage() {
 
                     {activeTab === 'consumables' && (
                         <div className="space-y-3">
-                            <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1">
+                            <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1 font-cinzel">
                                 <FlaskRound className="w-3.5 h-3.5" /> Consumables
                             </h2>
                             <p className="text-xs text-slate-600 px-1">Single-use items. Can purchase multiples.</p>
@@ -250,7 +250,7 @@ export default function ShopPage() {
                     {activeTab === 'cosmetics' && (
                         <div className="space-y-6">
                             <div className="space-y-3">
-                                <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1">
+                                <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1 font-cinzel">
                                     <Crown className="w-3.5 h-3.5" /> Titles
                                 </h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -303,7 +303,7 @@ export default function ShopPage() {
                             </div>
 
                             <div className="space-y-3">
-                                <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1">
+                                <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1 font-cinzel">
                                     <Package className="w-3.5 h-3.5" /> Portrait Frames
                                 </h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

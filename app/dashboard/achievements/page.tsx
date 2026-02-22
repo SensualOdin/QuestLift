@@ -107,7 +107,7 @@ export default function AchievementsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-3 font-cinzel">
                         <Trophy className="w-6 h-6 text-yellow-500" />
                         Achievement Hall
                     </h1>
@@ -150,7 +150,7 @@ export default function AchievementsPage() {
                 const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.workout
                 return (
                     <div key={category} className="space-y-4">
-                        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">
+                        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider font-cinzel">
                             {categoryLabels[category] || category}
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

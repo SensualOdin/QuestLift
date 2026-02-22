@@ -99,8 +99,8 @@ export default function InventoryPage() {
         <div className="mx-auto max-w-4xl px-3 py-4 sm:p-4 md:p-8 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                        <Package className="w-6 h-6 text-indigo-400" /> Inventory
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2 font-cinzel">
+                        <Package className="w-6 h-6 text-amber-400" /> Inventory
                     </h1>
                     <p className="text-sm text-slate-500 mt-1">Manage your equipment and loot</p>
                 </div>
@@ -121,7 +121,7 @@ export default function InventoryPage() {
 
             {/* Equipment Slots */}
             <div className="space-y-3">
-                <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1">Equipped Gear</h2>
+                <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1 font-cinzel">Equipped Gear</h2>
                 <div className="grid grid-cols-3 gap-3">
                     {['weapon', 'armor', 'accessory'].map(slot => {
                         const eq = equipped(slot)
@@ -154,7 +154,7 @@ export default function InventoryPage() {
             {/* Loot Boxes */}
             {unopenedBoxes.length > 0 && (
                 <div className="space-y-3">
-                    <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1">Loot Boxes</h2>
+                    <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1 font-cinzel">Loot Boxes</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {unopenedBoxes.map(lb => (
                             <Card key={lb.id} className="border-yellow-500/30 bg-yellow-400/5">
@@ -173,7 +173,7 @@ export default function InventoryPage() {
 
             {/* Inventory Grid */}
             <div className="space-y-3">
-                <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1">All Equipment ({items.length})</h2>
+                <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1 font-cinzel">All Equipment ({items.length})</h2>
                 {items.length === 0 ? (
                     <Card className="border-slate-800 bg-slate-900/40">
                         <CardContent className="p-8 text-center">
