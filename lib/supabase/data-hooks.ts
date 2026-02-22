@@ -654,7 +654,17 @@ export async function saveWorkoutSession(
         }
     })
 
-    const xpEarned = calculateSessionXP(xpSets, consistency)
+    let xpEarned = calculateSessionXP(xpSets, consistency)
+
+    // Apply equipment bonuses
+    const equippedEffects = await getEquippedEffects(userId)
+    if (equippedEffects.xpBonusFlat > 0) {
+        if (equippedEffects.xpBonusFlat < 1) {
+            xpEarned = Math.round(xpEarned * (1 + equippedEffects.xpBonusFlat))
+        } else {
+            xpEarned += Math.round(equippedEffects.xpBonusFlat)
+        }
+    }
 
     // Update the workout record with real XP
     await supabase
@@ -725,6 +735,9 @@ export async function saveWorkoutSession(
 
         // --- Iron Scraps: earn 10 per workout + 5 per streak day (bonus) ---
         ironScrapsEarned = 10 + Math.min(newStreak, 10) * 5
+        if (equippedEffects.ironScrapsBonus > 0) {
+            ironScrapsEarned = Math.round(ironScrapsEarned * (1 + equippedEffects.ironScrapsBonus))
+        }
 
         await supabase
             .from('users')
@@ -769,6 +782,13 @@ export async function saveWorkoutSession(
                 } else if (exType !== 'Strength' && (set.rpe || 0) >= 8) {
                     cardioDmg += (set.reps || 0) * 50
                 }
+            }
+
+            // Apply equipment raid damage bonus
+            if (equippedEffects.raidDamageBonus > 0) {
+                physicalDmg = Math.round(physicalDmg * (1 + equippedEffects.raidDamageBonus))
+                cardioDmg = Math.round(cardioDmg * (1 + equippedEffects.raidDamageBonus))
+                magicDmg = Math.round(magicDmg * (1 + equippedEffects.raidDamageBonus))
             }
 
             // Apply weakness/resistance multipliers
@@ -958,4 +978,130 @@ export async function equipShopItem(userId: string, type: 'title' | 'frame', val
     const update = type === 'title' ? { equipped_title: value } : { equipped_frame: value }
     const { error } = await supabase.from('users').update(update).eq('id', userId)
     return !error
+}
+
+// --- Equipment System ---
+// Note: equipment/user_equipment/loot_boxes/loot_box_contents tables are not yet in generated types,
+// so we use (supabase as any) for those tables.
+
+export async function fetchUserEquipment(userId: string) {
+    const supabase = createClient()
+    const { data, error } = await (supabase as any)
+        .from('user_equipment')
+        .select('*, equipment(*)')
+        .eq('user_id', userId)
+        .order('obtained_at', { ascending: false })
+    if (error) { console.error('Error fetching equipment:', error); return [] }
+    return data || []
+}
+
+export async function fetchShopEquipment() {
+    const supabase = createClient()
+    const { data } = await (supabase as any)
+        .from('equipment')
+        .select('*')
+        .not('cost', 'is', null)
+        .order('cost', { ascending: true })
+    return data || []
+}
+
+export async function equipItem(userId: string, userEquipmentId: string, slot: string): Promise<boolean> {
+    const supabase = createClient()
+    await (supabase as any).from('user_equipment').update({ equipped_slot: null }).eq('user_id', userId).eq('equipped_slot', slot)
+    const { error } = await (supabase as any).from('user_equipment').update({ equipped_slot: slot }).eq('id', userEquipmentId).eq('user_id', userId)
+    return !error
+}
+
+export async function unequipItem(userId: string, userEquipmentId: string): Promise<boolean> {
+    const supabase = createClient()
+    const { error } = await (supabase as any).from('user_equipment').update({ equipped_slot: null }).eq('id', userEquipmentId).eq('user_id', userId)
+    return !error
+}
+
+export async function purchaseEquipment(userId: string, equipmentId: string, cost: number): Promise<{ success: boolean, error?: string }> {
+    const supabase = createClient()
+    const { data: userData } = await supabase.from('users').select('iron_scraps').eq('id', userId).single()
+    if (!userData || (userData.iron_scraps || 0) < cost) return { success: false, error: 'Not enough Iron Scraps' }
+
+    const { count } = await (supabase as any).from('user_equipment').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('equipment_id', equipmentId)
+    if ((count || 0) > 0) return { success: false, error: 'Already owned' }
+
+    const { error: updateErr } = await supabase.from('users').update({ iron_scraps: (userData.iron_scraps || 0) - cost }).eq('id', userId)
+    if (updateErr) return { success: false, error: 'Failed to deduct scraps' }
+
+    const { error: insertErr } = await (supabase as any).from('user_equipment').insert({ user_id: userId, equipment_id: equipmentId, source: 'shop' })
+    if (insertErr) {
+        await supabase.from('users').update({ iron_scraps: userData.iron_scraps }).eq('id', userId)
+        return { success: false, error: 'Failed to add item' }
+    }
+    return { success: true }
+}
+
+export async function fetchLootBoxes(userId: string) {
+    const supabase = createClient()
+    const { data } = await (supabase as any).from('loot_boxes').select('*, loot_box_contents(*, equipment(*))').eq('user_id', userId).order('created_at', { ascending: false })
+    return data || []
+}
+
+export async function openLootBox(userId: string, lootBoxId: string): Promise<any> {
+    const supabase = createClient()
+    const { data: allGear } = await (supabase as any).from('equipment').select('id, rarity')
+    if (!allGear || allGear.length === 0) return null
+
+    const weights: Record<string, number> = { common: 50, rare: 30, epic: 15, legendary: 5 }
+    const weighted = allGear.flatMap((g: any) => Array(weights[g.rarity] || 10).fill(g))
+    const pick = weighted[Math.floor(Math.random() * weighted.length)]
+
+    await (supabase as any).from('loot_box_contents').insert({ loot_box_id: lootBoxId, equipment_id: pick.id })
+    await (supabase as any).from('loot_boxes').update({ opened: true }).eq('id', lootBoxId)
+    await (supabase as any).from('user_equipment').insert({ user_id: userId, equipment_id: pick.id, source: 'raid_drop' })
+
+    const { data: gear } = await (supabase as any).from('equipment').select('*').eq('id', pick.id).single()
+    return gear
+}
+
+export async function getEquippedEffects(userId: string) {
+    const supabase = createClient()
+    const { data } = await (supabase as any)
+        .from('user_equipment')
+        .select('equipped_slot, equipment(*)')
+        .eq('user_id', userId)
+        .not('equipped_slot', 'is', null)
+
+    const effects = {
+        xpBonusFlat: 0,
+        xpBonusByExercise: new Map<string, number>(),
+        xpBonusByCategory: new Map<string, number>(),
+        raidDamageBonus: 0,
+        ironScrapsBonus: 0,
+    }
+
+    for (const item of (data || [])) {
+        const eq = Array.isArray(item.equipment) ? item.equipment[0] : item.equipment
+        if (!eq) continue
+        switch ((eq as any).effect_type) {
+            case 'xp_bonus_flat':
+                effects.xpBonusFlat += Number((eq as any).effect_value) || 0
+                break
+            case 'xp_bonus_exercise':
+                if ((eq as any).effect_target) {
+                    const existing = effects.xpBonusByExercise.get((eq as any).effect_target) || 0
+                    effects.xpBonusByExercise.set((eq as any).effect_target, existing + Number((eq as any).effect_value))
+                }
+                break
+            case 'xp_bonus_category':
+                if ((eq as any).effect_target) {
+                    const existing = effects.xpBonusByCategory.get((eq as any).effect_target) || 0
+                    effects.xpBonusByCategory.set((eq as any).effect_target, existing + Number((eq as any).effect_value))
+                }
+                break
+            case 'raid_damage_bonus':
+                effects.raidDamageBonus += Number((eq as any).effect_value) || 0
+                break
+            case 'iron_scraps_bonus':
+                effects.ironScrapsBonus += Number((eq as any).effect_value) || 0
+                break
+        }
+    }
+    return effects
 }
