@@ -133,6 +133,9 @@ export function WorkoutLogger() {
     const [showResumePrompt, setShowResumePrompt] = useState(false)
     const [savedState, setSavedState] = useState<SavedWorkoutState | null>(null)
 
+    // Set completion pulse animation
+    const [pulsingSetIds, setPulsingSetIds] = useState<Set<string>>(new Set())
+
     useEffect(() => {
         loadExercises()
         const saved = loadWorkoutFromStorage()
@@ -589,8 +592,17 @@ export function WorkoutLogger() {
                                             </>
                                         )}
 
-                                        <Button variant={set.completed ? "default" : "secondary"} size="icon" onClick={() => toggleSetComplete(activeEx.id, set.id, activeEx.exerciseDef.exercise_type!)} className={`h-11 w-11 shrink-0 ${set.completed ? 'bg-indigo-500 text-white active:bg-indigo-600' : 'bg-slate-800 text-slate-400 active:bg-indigo-500 active:text-white'}`}>
-                                            <Check className="w-5 h-5" />
+                                        <Button variant={set.completed ? "default" : "secondary"} size="icon" onClick={() => {
+                                            if (!set.completed) {
+                                                setPulsingSetIds(prev => new Set(prev).add(set.id))
+                                                setTimeout(() => setPulsingSetIds(prev => { const next = new Set(prev); next.delete(set.id); return next }), 500)
+                                            }
+                                            toggleSetComplete(activeEx.id, set.id, activeEx.exerciseDef.exercise_type!)
+                                        }} className={`h-11 w-11 shrink-0 relative overflow-visible ${set.completed ? 'bg-indigo-500 text-white active:bg-indigo-600' : 'bg-slate-800 text-slate-400 active:bg-indigo-500 active:text-white'}`}>
+                                            <Check className="w-5 h-5 relative z-10" />
+                                            {pulsingSetIds.has(set.id) && (
+                                                <span className="absolute inset-0 rounded-md border-2 border-amber-400" style={{ animation: 'set-complete-pulse 0.5s ease-out forwards' }} />
+                                            )}
                                         </Button>
                                     </div>
                                 ))}
