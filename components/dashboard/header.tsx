@@ -70,9 +70,9 @@ export function Header() {
         <>
             <header className="flex items-center justify-between pb-4 sm:pb-6 border-b border-slate-800/60 gap-3">
                 <div className="min-w-0">
-                    <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-white truncate">
+                    <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-white truncate font-cinzel">
                         <span className="sm:hidden">QuestLift</span>
-                        <span className="hidden sm:inline">Inn / <span className="text-indigo-400">Dashboard</span></span>
+                        <span className="hidden sm:inline">The Inn</span>
                     </h1>
                     <p className="text-slate-400 text-xs sm:text-base truncate">Welcome back, {user?.display_name || 'Adventurer'}</p>
                 </div>

@@ -1,6 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { GameCard } from "@/components/ui/game-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Scroll, CheckCircle2, Sparkles, Clock, Hammer } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -33,9 +34,9 @@ export function AdventurersGuild() {
 
     if (loading) {
         return (
-            <Card className="border-amber-900/40 bg-gradient-to-br from-slate-900/80 to-amber-950/20 backdrop-blur-xl">
+            <GameCard variant="amber" withTopAccent>
                 <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 font-cinzel">
                         <Scroll className="w-5 h-5 text-amber-400" />
                         <span className="text-amber-200">Adventurer&apos;s Guild</span>
                     </CardTitle>
@@ -44,15 +45,15 @@ export function AdventurersGuild() {
                     <Skeleton className="h-28 w-full bg-amber-900/20 rounded-2xl" />
                     <Skeleton className="h-28 w-full bg-amber-900/20 rounded-2xl" />
                 </CardContent>
-            </Card>
+            </GameCard>
         )
     }
 
     return (
-        <Card className="border-amber-900/40 bg-gradient-to-br from-slate-900/80 to-amber-950/20 backdrop-blur-xl">
+        <GameCard variant="amber" withTopAccent>
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 font-cinzel">
                         <Scroll className="w-5 h-5 text-amber-400" />
                         <span className="text-amber-200">Adventurer&apos;s Guild</span>
                     </CardTitle>
@@ -122,6 +123,6 @@ export function AdventurersGuild() {
                     <p className="text-sm text-slate-500 italic text-center py-4">No bounties available today.</p>
                 )}
             </CardContent>
-        </Card>
+        </GameCard>
     )
 }

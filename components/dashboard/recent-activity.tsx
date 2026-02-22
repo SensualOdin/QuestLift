@@ -1,5 +1,6 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { GameCard } from "@/components/ui/game-card"
 import { Badge } from "@/components/ui/badge"
 import { Activity, Dumbbell, Trophy } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -26,9 +27,9 @@ export function RecentActivity() {
 
     if (loading) {
         return (
-            <Card className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl h-48">
+            <GameCard withTopAccent className="h-48">
                 <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 font-cinzel">
                         <Activity className="w-5 h-5 text-indigo-400" />
                         Recent Activity
                     </CardTitle>
@@ -37,15 +38,15 @@ export function RecentActivity() {
                     <Skeleton className="h-6 w-1/2 bg-slate-800 mb-4" />
                     <Skeleton className="h-4 w-1/3 bg-slate-800" />
                 </CardContent>
-            </Card>
+            </GameCard>
         )
     }
 
     if (activities.length === 0) {
         return (
-            <Card className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl">
+            <GameCard withTopAccent>
                 <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 font-cinzel">
                         <Activity className="w-5 h-5 text-indigo-400" />
                         Recent Activity
                     </CardTitle>
@@ -53,13 +54,13 @@ export function RecentActivity() {
                 <CardContent>
                     <p className="text-sm text-slate-500 italic text-center py-4">No recent activity. Time to hit the iron!</p>
                 </CardContent>
-            </Card>
+            </GameCard>
         )
     }
     return (
-        <Card className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl">
+        <GameCard withTopAccent>
             <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2 font-cinzel">
                     <Activity className="w-5 h-5 text-indigo-400" />
                     Recent Activity
                 </CardTitle>
@@ -104,6 +105,6 @@ export function RecentActivity() {
                     ))}
                 </div>
             </CardContent>
-        </Card>
+        </GameCard>
     )
 }

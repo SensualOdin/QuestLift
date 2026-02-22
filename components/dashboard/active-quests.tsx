@@ -1,6 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { GameCard } from "@/components/ui/game-card"
 import { Progress } from "@/components/ui/progress"
 import { Target, Swords, Timer, CheckCircle2, Coins, Clock } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -58,9 +59,9 @@ export function ActiveQuests() {
 
     if (loading) {
         return (
-            <Card className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl h-48">
+            <GameCard withTopAccent className="h-48">
                 <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 font-cinzel">
                         <Target className="w-5 h-5 text-indigo-400" />
                         Active Quests
                     </CardTitle>
@@ -68,15 +69,15 @@ export function ActiveQuests() {
                 <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Skeleton className="h-24 w-full bg-slate-800 rounded-2xl" />
                 </CardContent>
-            </Card>
+            </GameCard>
         )
     }
 
     if (quests.length === 0) {
         return (
-            <Card className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl">
+            <GameCard withTopAccent>
                 <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 font-cinzel">
                         <Target className="w-5 h-5 text-indigo-400" />
                         Active Quests
                     </CardTitle>
@@ -84,14 +85,14 @@ export function ActiveQuests() {
                 <CardContent>
                     <p className="text-sm text-slate-500 italic text-center py-4">No active quests found. Go rest at the inn.</p>
                 </CardContent>
-            </Card>
+            </GameCard>
         )
     }
 
     return (
-        <Card className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl">
+        <GameCard withTopAccent>
             <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2 font-cinzel">
                     <Target className="w-5 h-5 text-indigo-400" />
                     Active Quests
                 </CardTitle>
@@ -153,6 +154,6 @@ export function ActiveQuests() {
                     )
                 })}
             </CardContent>
-        </Card>
+        </GameCard>
     )
 }

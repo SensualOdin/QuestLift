@@ -156,9 +156,9 @@ export function UserProfile() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
         >
-            <Card className="border-slate-800/80 bg-slate-900/60 backdrop-blur-2xl overflow-hidden relative shadow-2xl">
+            <Card className="border-slate-700/60 bg-gradient-to-b from-slate-900/80 to-slate-950/90 backdrop-blur-2xl overflow-hidden relative shadow-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                 {/* Decorative background glow */}
-                <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
 
                 <CardHeader className="pb-2 relative z-10">
@@ -182,7 +182,7 @@ export function UserProfile() {
 
                         {/* Name & Class */}
                         <div className="text-center pt-1">
-                            <CardTitle className="text-xl sm:text-2xl font-bold text-white tracking-tight">{user.display_name}</CardTitle>
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-white tracking-tight font-cinzel">{user.display_name}</CardTitle>
                             {user.equipped_title && (
                                 <p className="text-[10px] text-yellow-400/80 font-semibold uppercase tracking-wider mt-0.5">
                                     {user.equipped_title}
@@ -224,7 +224,7 @@ export function UserProfile() {
 
                     {/* Attributes */}
                     <div className="pt-4 border-t border-slate-800/60">
-                        <h4 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 mb-3 px-1">Core Attributes</h4>
+                        <h4 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 mb-3 px-1 font-cinzel">Core Attributes</h4>
                         <div className="grid grid-cols-4 gap-2">
                             <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center">
                                 <div className="text-red-400 text-xs font-bold mb-1">STR</div>
