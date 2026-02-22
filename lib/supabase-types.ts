@@ -184,6 +184,7 @@ export type Database = {
         Row: {
           created_at: string
           damage: number
+          damage_type: string
           id: string
           raid_id: string
           user_id: string
@@ -192,6 +193,7 @@ export type Database = {
         Insert: {
           created_at?: string
           damage: number
+          damage_type?: string
           id?: string
           raid_id: string
           user_id: string
@@ -200,6 +202,7 @@ export type Database = {
         Update: {
           created_at?: string
           damage?: number
+          damage_type?: string
           id?: string
           raid_id?: string
           user_id?: string
@@ -233,30 +236,45 @@ export type Database = {
         Row: {
           boss_max_hp: number
           boss_name: string
+          boss_resistance: string | null
+          boss_weakness: string | null
           created_at: string
           end_time: string
           id: string
           party_id: string
+          shield_hp: number | null
+          shield_hp_current: number | null
+          shield_type: string | null
           start_time: string
           status: string | null
         }
         Insert: {
           boss_max_hp: number
           boss_name: string
+          boss_resistance?: string | null
+          boss_weakness?: string | null
           created_at?: string
           end_time: string
           id?: string
           party_id: string
+          shield_hp?: number | null
+          shield_hp_current?: number | null
+          shield_type?: string | null
           start_time: string
           status?: string | null
         }
         Update: {
           boss_max_hp?: number
           boss_name?: string
+          boss_resistance?: string | null
+          boss_weakness?: string | null
           created_at?: string
           end_time?: string
           id?: string
           party_id?: string
+          shield_hp?: number | null
+          shield_hp_current?: number | null
+          shield_type?: string | null
           start_time?: string
           status?: string | null
         }

@@ -65,6 +65,20 @@ export function RaidBoss() {
         c.color = colors[i % colors.length]
     })
 
+    // Calculate shield damage
+    const shieldDmgType = raid.shield_type === 'swift' ? 'cardio' :
+        raid.shield_type === 'arcane' ? 'magic' : 'physical'
+    let shieldDamage = 0
+    for (const dmgRec of (raid.raid_damage || [])) {
+        if ((dmgRec as any).damage_type === shieldDmgType) {
+            shieldDamage += dmgRec.damage || 0
+        }
+    }
+    const shieldHpMax = raid.shield_hp || 0
+    const shieldHpCurrent = Math.max(0, shieldHpMax - shieldDamage)
+    const shieldPercent = shieldHpMax > 0 ? (shieldHpCurrent / shieldHpMax) * 100 : 0
+    const shieldBroken = shieldHpMax === 0 || shieldDamage >= shieldHpMax
+
     const hpCurrent = Math.max(0, hpFull - totalDamage)
     const hpPercent = (hpCurrent / hpFull) * 100
     const damageTaken = hpFull - hpCurrent
@@ -92,6 +106,20 @@ export function RaidBoss() {
                         <p className="text-xs text-red-400 flex items-center gap-1 mt-1 font-mono uppercase tracking-widest">
                             <Skull className="w-3.5 h-3.5" /> Enrages in {timeRemaining}
                         </p>
+                        {(raid.boss_weakness || raid.boss_resistance) && (
+                            <div className="flex gap-2 mt-2 flex-wrap">
+                                {raid.boss_weakness && (
+                                    <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 font-mono uppercase">
+                                        Weak: {raid.boss_weakness} (2x)
+                                    </span>
+                                )}
+                                {raid.boss_resistance && (
+                                    <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30 font-mono uppercase">
+                                        Resists: {raid.boss_resistance} (0.5x)
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                     <div className="w-12 h-12 bg-slate-900 border-2 border-red-500/50 rounded-lg flex items-center justify-center text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
                         <Swords className="w-6 h-6" />
@@ -100,6 +128,30 @@ export function RaidBoss() {
             </CardHeader>
 
             <CardContent className="pt-6 relative z-10 space-y-6">
+
+                {/* Shield Bar */}
+                {raid.shield_type && shieldHpMax > 0 && !shieldBroken && (
+                    <div className="mb-4">
+                        <div className="flex justify-between text-xs font-bold font-mono tracking-widest uppercase mb-2">
+                            <span className="text-cyan-400 flex items-center gap-1">
+                                <Shield className="w-3 h-3" />
+                                {raid.shield_type === 'swift' ? 'Swift Shield' : raid.shield_type === 'arcane' ? 'Arcane Shield' : 'Iron Shield'}
+                            </span>
+                            <span className="text-cyan-300">
+                                {shieldHpCurrent.toLocaleString()} / {shieldHpMax.toLocaleString()}
+                            </span>
+                        </div>
+                        <div className="relative h-3 w-full bg-slate-900 rounded-sm overflow-hidden border-2 border-cyan-950">
+                            <div
+                                className="absolute top-0 right-0 h-full bg-cyan-600 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(6,182,212,0.8)]"
+                                style={{ width: `${shieldPercent}%` }}
+                            />
+                        </div>
+                        <p className="text-[10px] text-cyan-400/60 mt-1">
+                            {raid.shield_type === 'swift' ? 'Break with Cardio damage' : raid.shield_type === 'arcane' ? 'Break with Magic damage' : 'Break with Strength damage'}
+                        </p>
+                    </div>
+                )}
 
                 {/* Boss HP Bar */}
                 <div>
@@ -165,7 +217,8 @@ export function RaidBoss() {
             <CardFooter className="bg-red-950/20 border-t border-red-900/30 p-4">
                 <p className="text-xs text-slate-400 text-center w-full leading-relaxed">
                     Log workouts to deal damage. 1 lb lifted = 1 DMG.<br />
-                    Cardio at RPE 8+ = 50 DMG/min. Defeat the boss for rare loot.
+                    Cardio at RPE 8+ = 50 DMG/min. Recovery = 30 DMG/min (Magic).<br />
+                    Defeat the boss for rare loot.
                 </p>
             </CardFooter>
         </Card>

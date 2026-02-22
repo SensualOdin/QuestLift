@@ -752,48 +752,90 @@ export async function saveWorkoutSession(
     if (memberData) {
         const { data: activeRaid } = await supabase
             .from('raids')
-            .select('id, boss_max_hp')
+            .select('id, boss_max_hp, shield_type, shield_hp, shield_hp_current, boss_weakness, boss_resistance')
             .eq('party_id', memberData.party_id)
             .eq('status', 'active')
             .single()
 
         if (activeRaid) {
-            // Physical damage = total volume (1 lb = 1 DMG)
-            let damage = strVolume
+            let physicalDmg = strVolume
+            let cardioDmg = 0
+            let magicDmg = 0
 
             for (const set of sets) {
                 const exType = exerciseTypes.get(set.exercise_id) || 'Strength'
                 if (exType === 'Recovery') {
-                    // Magic damage: 30 DMG per minute, no RPE gate
-                    damage += (set.reps || 0) * 30
+                    magicDmg += (set.reps || 0) * 30
                 } else if (exType !== 'Strength' && (set.rpe || 0) >= 8) {
-                    // Cardio damage: 50 DMG/min at RPE 8+
-                    damage += (set.reps || 0) * 50
+                    cardioDmg += (set.reps || 0) * 50
                 }
             }
 
-            if (damage > 0) {
-                await supabase
-                    .from('raid_damage')
-                    .insert({
-                        raid_id: activeRaid.id,
-                        user_id: userId,
-                        workout_id: insertedWorkout.id,
-                        damage: damage
-                    })
+            // Apply weakness/resistance multipliers
+            const applyMultiplier = (dmg: number, type: string) => {
+                if (activeRaid.boss_weakness === type) return Math.round(dmg * 2)
+                if (activeRaid.boss_resistance === type) return Math.round(dmg * 0.5)
+                return dmg
+            }
 
-                // Check if boss is defeated
+            physicalDmg = applyMultiplier(physicalDmg, 'physical')
+            cardioDmg = applyMultiplier(cardioDmg, 'cardio')
+            magicDmg = applyMultiplier(magicDmg, 'magic')
+
+            const damageRecords: { raid_id: string, user_id: string, workout_id: string, damage: number, damage_type: string }[] = []
+            if (physicalDmg > 0) damageRecords.push({ raid_id: activeRaid.id, user_id: userId, workout_id: insertedWorkout.id, damage: physicalDmg, damage_type: 'physical' })
+            if (cardioDmg > 0) damageRecords.push({ raid_id: activeRaid.id, user_id: userId, workout_id: insertedWorkout.id, damage: cardioDmg, damage_type: 'cardio' })
+            if (magicDmg > 0) damageRecords.push({ raid_id: activeRaid.id, user_id: userId, workout_id: insertedWorkout.id, damage: magicDmg, damage_type: 'magic' })
+
+            if (damageRecords.length > 0) {
+                await supabase.from('raid_damage').insert(damageRecords)
+
+                // Check total damage for boss defeat
                 const { data: allDamage } = await supabase
                     .from('raid_damage')
-                    .select('damage')
+                    .select('damage, damage_type')
                     .eq('raid_id', activeRaid.id)
 
-                const totalDmg = (allDamage || []).reduce((sum, d) => sum + (d.damage || 0), 0)
-                if (totalDmg >= activeRaid.boss_max_hp) {
-                    await supabase
-                        .from('raids')
-                        .update({ status: 'defeated' })
-                        .eq('id', activeRaid.id)
+                let totalDmg = 0
+                let shieldDmg = 0
+
+                const shieldDmgType = activeRaid.shield_type === 'swift' ? 'cardio' :
+                    activeRaid.shield_type === 'arcane' ? 'magic' : 'physical'
+
+                for (const d of (allDamage || [])) {
+                    totalDmg += d.damage || 0
+                    if (activeRaid.shield_type && d.damage_type === shieldDmgType) {
+                        shieldDmg += d.damage || 0
+                    }
+                }
+
+                // Update shield HP current
+                if (activeRaid.shield_hp && activeRaid.shield_hp > 0) {
+                    const newShieldHp = Math.max(0, (activeRaid.shield_hp) - shieldDmg)
+                    await supabase.from('raids').update({ shield_hp_current: newShieldHp }).eq('id', activeRaid.id)
+                }
+
+                // Boss defeated when total damage >= max HP (and shield is broken if present)
+                const shieldBroken = !activeRaid.shield_type || !activeRaid.shield_hp || shieldDmg >= activeRaid.shield_hp
+                if (shieldBroken && totalDmg >= activeRaid.boss_max_hp) {
+                    await supabase.from('raids').update({ status: 'defeated' }).eq('id', activeRaid.id)
+
+                    // Award loot boxes to all contributing party members
+                    const { data: contributors } = await supabase
+                        .from('raid_damage')
+                        .select('user_id')
+                        .eq('raid_id', activeRaid.id)
+
+                    const uniqueUsers = [...new Set((contributors || []).map(c => c.user_id))]
+                    const lootBoxInserts = uniqueUsers.map(uid => ({ user_id: uid, source: 'raid' }))
+                    if (lootBoxInserts.length > 0) {
+                        // loot_boxes table may not exist yet, wrap in try-catch
+                        try {
+                            await (supabase as any).from('loot_boxes').insert(lootBoxInserts)
+                        } catch (e) {
+                            // Loot boxes not yet available, skip
+                        }
+                    }
                 }
             }
         }
