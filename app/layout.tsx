@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Cinzel } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const cinzel = Cinzel({ subsets: ["latin"], weight: ["400", "700", "900"], variable: "--font-cinzel" });
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -34,7 +35,7 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
       </head>
-      <body className={`${inter.className} bg-slate-950 text-slate-50 antialiased min-h-screen overscroll-none`}>
+      <body className={`${inter.variable} ${cinzel.variable} font-sans bg-slate-950 text-slate-50 antialiased min-h-screen overscroll-none`}>
         {children}
       </body>
     </html>
