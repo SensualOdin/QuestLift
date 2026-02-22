@@ -665,12 +665,15 @@ export async function saveWorkoutSession(
     // Update user stats
     let strVolume = 0
     let dexMinutes = 0
+    let wisMinutes = 0
     let conSets = sets.length
 
     for (const set of sets) {
         const exType = exerciseTypes.get(set.exercise_id) || 'Strength'
         if (exType === 'Strength') {
             strVolume += (set.weight || 0) * (set.reps || 0)
+        } else if (exType === 'Recovery') {
+            wisMinutes += (set.reps || 0)
         } else {
             dexMinutes += (set.reps || 0) // reps stores duration for cardio
         }
@@ -679,7 +682,7 @@ export async function saveWorkoutSession(
     // Fetch current user data to compute new level + streak
     const { data: currentUser } = await supabase
         .from('users')
-        .select('xp_current, level, str_volume_lifetime, dex_minutes_lifetime, con_sets_lifetime, current_streak, last_workout_date, iron_scraps')
+        .select('xp_current, level, str_volume_lifetime, dex_minutes_lifetime, con_sets_lifetime, wis_minutes_lifetime, current_streak, last_workout_date, iron_scraps')
         .eq('id', userId)
         .single()
 
@@ -694,6 +697,7 @@ export async function saveWorkoutSession(
         const newStrVolume = (currentUser.str_volume_lifetime || 0) + strVolume
         const newDexMinutes = (currentUser.dex_minutes_lifetime || 0) + dexMinutes
         const newConSets = (currentUser.con_sets_lifetime || 0) + conSets
+        const newWisMinutes = (currentUser.wis_minutes_lifetime || 0) + wisMinutes
 
         newLevel = calculateLevelFromXP(newXpCurrent)
 
@@ -730,6 +734,7 @@ export async function saveWorkoutSession(
                 str_volume_lifetime: newStrVolume,
                 dex_minutes_lifetime: newDexMinutes,
                 con_sets_lifetime: newConSets,
+                wis_minutes_lifetime: newWisMinutes,
                 current_streak: newStreak,
                 last_workout_date: today,
                 iron_scraps: (currentUser.iron_scraps || 0) + ironScrapsEarned,
@@ -753,12 +758,17 @@ export async function saveWorkoutSession(
             .single()
 
         if (activeRaid) {
-            // Damage = total volume (1 lb = 1 DMG) + cardio damage (50 DMG/min at RPE 8+)
+            // Physical damage = total volume (1 lb = 1 DMG)
             let damage = strVolume
+
             for (const set of sets) {
                 const exType = exerciseTypes.get(set.exercise_id) || 'Strength'
-                if (exType !== 'Strength' && (set.rpe || 0) >= 8) {
-                    damage += (set.reps || 0) * 50 // reps = duration for cardio, 50 DMG/min
+                if (exType === 'Recovery') {
+                    // Magic damage: 30 DMG per minute, no RPE gate
+                    damage += (set.reps || 0) * 30
+                } else if (exType !== 'Strength' && (set.rpe || 0) >= 8) {
+                    // Cardio damage: 50 DMG/min at RPE 8+
+                    damage += (set.reps || 0) * 50
                 }
             }
 
@@ -820,6 +830,8 @@ function determineClassSpecialty(className: string | null | undefined, exerciseT
             return exerciseType === 'Cardio' || exerciseType === 'Mobility'
         case 'Paladin':
             return exerciseType === 'Strength' // Paladin specializes in volume work
+        case 'Wizard':
+            return exerciseType === 'Recovery' || exerciseType === 'Mobility'
         default:
             return false
     }

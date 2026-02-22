@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Shield, Sword, Wind } from "lucide-react"
+import { Shield, Sword, Wind, Sparkles } from "lucide-react"
 
 export function ClassSelectionModal({ isOpen, onSelectClass }: { isOpen: boolean, onSelectClass: (c: string) => void }) {
     const [selectedClass, setSelectedClass] = useState<string | null>(null)
@@ -41,12 +41,23 @@ export function ClassSelectionModal({ isOpen, onSelectClass }: { isOpen: boolean
             bg: "bg-blue-400/10 hover:bg-blue-400/20",
             border: "border-blue-400/30",
             selectedBorder: "border-blue-400 ring-4 ring-blue-400/20"
+        },
+        {
+            id: "Wizard",
+            name: "Wizard",
+            icon: Sparkles,
+            stat: "WIS",
+            description: "Mind over matter. +15% XP on Core, Yoga, Mobility, and Recovery exercises.",
+            color: "text-purple-400",
+            bg: "bg-purple-400/10 hover:bg-purple-400/20",
+            border: "border-purple-400/30",
+            selectedBorder: "border-purple-400 ring-4 ring-purple-400/20"
         }
     ]
 
     return (
         <Dialog open={isOpen}>
-            <DialogContent className="sm:max-w-[700px] bg-slate-950 border-slate-800 text-slate-50 p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-[900px] bg-slate-950 border-slate-800 text-slate-50 p-0 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-slate-950 to-purple-500/10 pointer-events-none" />
 
                 <div className="p-8 relative z-10 space-y-6">
@@ -60,7 +71,7 @@ export function ClassSelectionModal({ isOpen, onSelectClass }: { isOpen: boolean
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
                         {CLASSES.map(cls => (
                             <button
                                 key={cls.id}

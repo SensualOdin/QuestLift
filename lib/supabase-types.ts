@@ -443,6 +443,7 @@ export type Database = {
           last_workout_date: string | null
           level: number | null
           str_volume_lifetime: number | null
+          wis_minutes_lifetime: number | null
           xp_current: number | null
         }
         Insert: {
@@ -460,6 +461,7 @@ export type Database = {
           last_workout_date?: string | null
           level?: number | null
           str_volume_lifetime?: number | null
+          wis_minutes_lifetime?: number | null
           xp_current?: number | null
         }
         Update: {
@@ -477,6 +479,7 @@ export type Database = {
           last_workout_date?: string | null
           level?: number | null
           str_volume_lifetime?: number | null
+          wis_minutes_lifetime?: number | null
           xp_current?: number | null
         }
         Relationships: []

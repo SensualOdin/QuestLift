@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Sword, Shield, Wind, Flame } from "lucide-react"
+import { Sword, Shield, Wind, Flame, Sparkles } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { createClient } from "@/lib/supabase/client"
 import { getXPForNextLevel } from "@/lib/xp-engine"
@@ -39,6 +39,13 @@ function getCharacterArt(className: string | null, level: number): { src: string
         return { src: '/characters/paladin-starter.png', tier: 'Paladin', color: 'text-indigo-400' }
     }
 
+    if (cls === 'wizard') {
+        if (level >= 50) return { src: '/characters/wizard-legendary.png', tier: 'Legendary Wizard', color: 'text-yellow-400' }
+        if (level >= 25) return { src: '/characters/wizard-mystic.png', tier: 'Mystic Wizard', color: 'text-purple-400' }
+        if (level >= 10) return { src: '/characters/wizard-arcane.png', tier: 'Arcane Wizard', color: 'text-blue-400' }
+        return { src: '/characters/wizard-starter.png', tier: 'Wizard', color: 'text-purple-400' }
+    }
+
     return { src: '/characters/novice.png', tier: 'Novice', color: 'text-slate-400' }
 }
 
@@ -46,6 +53,7 @@ function getClassIcon(className: string | null) {
     if (!className) return Sword
     if (className === 'Tank') return Shield
     if (className === 'Rogue') return Wind
+    if (className === 'Wizard') return Sparkles
     return Sword
 }
 
@@ -54,8 +62,8 @@ function getNextTier(className: string | null, level: number): { nextLevel: numb
     if (!className || level < 6) return { nextLevel: 6, nextName: 'Class Selection' }
 
     const tiers = [
-        { level: 10, name: className === 'Tank' ? 'Iron' : className === 'Rogue' ? 'Shadow' : 'Blessed' },
-        { level: 25, name: className === 'Tank' ? 'Steel' : className === 'Rogue' ? 'Phantom' : 'Divine' },
+        { level: 10, name: className === 'Tank' ? 'Iron' : className === 'Rogue' ? 'Shadow' : className === 'Wizard' ? 'Arcane' : 'Blessed' },
+        { level: 25, name: className === 'Tank' ? 'Steel' : className === 'Rogue' ? 'Phantom' : className === 'Wizard' ? 'Mystic' : 'Divine' },
         { level: 50, name: 'Legendary' },
     ]
 
@@ -217,7 +225,7 @@ export function UserProfile() {
                     {/* Attributes */}
                     <div className="pt-4 border-t border-slate-800/60">
                         <h4 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 mb-3 px-1">Core Attributes</h4>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                             <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center">
                                 <div className="text-red-400 text-xs font-bold mb-1">STR</div>
                                 <div className="text-lg font-mono text-slate-200" title="Lifetime Volume">
@@ -236,6 +244,12 @@ export function UserProfile() {
                                 <div className="text-blue-400 text-xs font-bold mb-1">CON</div>
                                 <div className="text-lg font-mono text-slate-200" title="Lifetime Sets">
                                     {user.con_sets_lifetime || 0}
+                                </div>
+                            </div>
+                            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center">
+                                <div className="text-purple-400 text-xs font-bold mb-1">WIS</div>
+                                <div className="text-lg font-mono text-slate-200" title="Lifetime Recovery Minutes">
+                                    {user.wis_minutes_lifetime || 0}
                                 </div>
                             </div>
                         </div>

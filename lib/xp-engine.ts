@@ -1,6 +1,6 @@
 // lib/xp-engine.ts
 
-export type WorkoutType = 'Strength' | 'Cardio' | 'Mobility'
+export type WorkoutType = 'Strength' | 'Cardio' | 'Mobility' | 'Recovery'
 
 export interface WorkoutSet {
     weight?: number
