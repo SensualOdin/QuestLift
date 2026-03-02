@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,7 @@ import { BattleLogModal } from "./battle-log-modal"
 import { LevelUpModal } from "./level-up-modal"
 import type { Achievement } from "@/lib/achievements"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { calculatePlates } from "@/lib/utils/plates"
 
 interface LoggedSet {
     id: string
@@ -115,8 +116,9 @@ export function WorkoutLogger() {
     const [workoutStartTime, setWorkoutStartTime] = useState<Date | null>(null)
     const [isSaving, setIsSaving] = useState(false)
 
-    const [activeTimer, setActiveTimer] = useState<number>(0)
-    const [timerRunning, setTimerRunning] = useState(false)
+    const [timerEndTime, setTimerEndTime] = useState<number | null>(null)
+    const [timerDisplay, setTimerDisplay] = useState<number>(0)
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
     // Exercise picker modal
     const [showExercisePicker, setShowExercisePicker] = useState(false)
@@ -158,39 +160,71 @@ export function WorkoutLogger() {
         }
     }, [])
 
+    // Timestamp-based timer — survives tab backgrounding
     useEffect(() => {
-        let interval: NodeJS.Timeout
-        if (timerRunning && activeTimer > 0) {
-            interval = setInterval(() => {
-                setActiveTimer((prev) => {
-                    if (prev <= 1) {
-                        // Timer just hit zero — notify
-                        if ('Notification' in window && Notification.permission === 'granted') {
-                            new Notification('Rest Over', {
-                                body: 'Time to hit your next set!',
-                                icon: '/icon-192x192.png',
-                                tag: 'rest-timer',
-                            })
-                        }
-                    }
-                    return prev - 1
-                })
-            }, 1000)
-        } else if (activeTimer === 0) {
-            setTimerRunning(false)
+        if (timerRef.current) clearInterval(timerRef.current)
+
+        if (timerEndTime === null) {
+            setTimerDisplay(0)
+            return
         }
-        return () => clearInterval(interval)
-    }, [timerRunning, activeTimer])
+
+        const tick = () => {
+            const remaining = Math.ceil((timerEndTime - Date.now()) / 1000)
+            if (remaining <= 0) {
+                setTimerDisplay(0)
+                setTimerEndTime(null)
+                // Main-thread fallback notification (covers iOS Safari / visible tab)
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('Rest Over', {
+                        body: 'Time to hit your next set!',
+                        icon: '/icon-192x192.png',
+                        tag: 'rest-timer',
+                    })
+                }
+            } else {
+                setTimerDisplay(remaining)
+            }
+        }
+
+        tick() // immediate sync
+        timerRef.current = setInterval(tick, 250)
+        return () => { if (timerRef.current) clearInterval(timerRef.current) }
+    }, [timerEndTime])
+
+    // Recalculate immediately when tab becomes visible again
+    useEffect(() => {
+        const onVisible = () => {
+            if (document.visibilityState === 'visible' && timerEndTime !== null) {
+                const remaining = Math.ceil((timerEndTime - Date.now()) / 1000)
+                setTimerDisplay(remaining > 0 ? remaining : 0)
+                if (remaining <= 0) setTimerEndTime(null)
+            }
+        }
+        document.addEventListener('visibilitychange', onVisible)
+        return () => document.removeEventListener('visibilitychange', onVisible)
+    }, [timerEndTime])
 
     const loadExercises = async () => {
         const data = await fetchAllExercises()
         setAvailableExercises(data)
     }
 
-    const startRestTimer = (seconds: number) => {
-        setActiveTimer(seconds)
-        setTimerRunning(true)
-    }
+    const startRestTimer = useCallback((seconds: number) => {
+        const endTime = Date.now() + seconds * 1000
+        setTimerEndTime(endTime)
+        setTimerDisplay(seconds)
+
+        // Schedule background notification via service worker
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SCHEDULE_NOTIFICATION',
+                delay: seconds * 1000,
+                title: 'Rest Over',
+                body: 'Time to hit your next set!',
+            })
+        }
+    }, [])
 
     const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0')
@@ -278,8 +312,11 @@ export function WorkoutLogger() {
                         if (s.id === setId) {
                             const updated = { ...s, [field]: value }
                             if (field === 'weight' && ex.exerciseDef.exercise_type === 'Strength') {
-                                const w = parseFloat(updated.weight) || 0
-                                updated.isPR = w > 0 && w > ex.previousBest
+                                const rawW = parseFloat(updated.weight) || 0
+                                const isDumbbell = ex.exerciseDef.equipment === 'Dumbbell'
+                                // DB stores total weight; dumbbell input is per-hand
+                                const compareW = isDumbbell ? rawW * 2 : rawW
+                                updated.isPR = compareW > 0 && compareW > ex.previousBest
                             }
                             return updated
                         }
@@ -345,7 +382,10 @@ export function WorkoutLogger() {
 
             ex.sets.filter(s => s.completed).forEach(s => {
                 const isStrength = ex.exerciseDef.exercise_type === 'Strength'
-                const w = parseFloat(s.weight) || 0
+                const isDumbbell = ex.exerciseDef.equipment === 'Dumbbell'
+                const rawW = parseFloat(s.weight) || 0
+                // DB stores total weight — dumbbell input is per-hand so double it
+                const w = isStrength && isDumbbell ? rawW * 2 : rawW
                 const r = parseInt(s.reps) || 0
                 const dur = parseInt(s.duration) || 0
 
@@ -491,12 +531,12 @@ export function WorkoutLogger() {
                         </p>
                     </div>
 
-                    <div className={`border rounded-xl px-3 py-1.5 flex items-center gap-2 transition-colors shrink-0 ${timerRunning ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-900 border-slate-800'}`}>
-                        <Timer className={`w-4 h-4 ${timerRunning ? 'text-indigo-400 animate-pulse' : 'text-slate-500'}`} />
+                    <div className={`border rounded-xl px-3 py-1.5 flex items-center gap-2 transition-colors shrink-0 ${timerEndTime !== null ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-900 border-slate-800'}`}>
+                        <Timer className={`w-4 h-4 ${timerEndTime !== null ? 'text-indigo-400 animate-pulse' : 'text-slate-500'}`} />
                         <div className="flex flex-col">
                             <span className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold leading-tight">Rest</span>
-                            <span className={`font-mono text-sm font-bold leading-tight ${timerRunning ? 'text-indigo-400' : 'text-slate-300'}`}>
-                                {formatTime(activeTimer)}
+                            <span className={`font-mono text-sm font-bold leading-tight ${timerEndTime !== null ? 'text-indigo-400' : 'text-slate-300'}`}>
+                                {formatTime(timerDisplay)}
                             </span>
                         </div>
                     </div>
@@ -510,6 +550,12 @@ export function WorkoutLogger() {
             <div className="space-y-6">
                 {workoutExercises.map((activeEx, exIndex) => {
                     const isStrength = activeEx.exerciseDef.exercise_type === "Strength"
+                    const isDumbbell = activeEx.exerciseDef.equipment === 'Dumbbell'
+                    const isBarbell = activeEx.exerciseDef.equipment === 'Barbell'
+                    // PR display: DB stores total, show per-hand for dumbbell
+                    const displayPR = isDumbbell && activeEx.previousBest > 0
+                        ? `${activeEx.previousBest / 2} ea.`
+                        : `${activeEx.previousBest}`
                     return (
                         <Card key={activeEx.id} className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl overflow-hidden shadow-lg">
                             <CardHeader className="pb-3 pt-4 px-4 bg-slate-900/80 border-b border-slate-800/60 flex flex-row items-center justify-between">
@@ -522,7 +568,7 @@ export function WorkoutLogger() {
                                         <div className="text-xs text-slate-400 mt-0.5">
                                             {activeEx.exerciseDef.equipment}
                                             {isStrength && activeEx.previousBest > 0 && (
-                                                <span className="text-yellow-500 ml-2">PR: {activeEx.previousBest} lbs</span>
+                                                <span className="text-yellow-500 ml-2">PR: {displayPR} lbs</span>
                                             )}
                                         </div>
                                     </div>
@@ -538,7 +584,7 @@ export function WorkoutLogger() {
                                     <div className="hidden sm:block w-20 text-center">Prev</div>
                                     {isStrength ? (
                                         <>
-                                            <div className="flex-1 text-center">lbs</div>
+                                            <div className="flex-1 text-center">{isDumbbell ? 'lbs ea.' : 'lbs'}</div>
                                             <div className="flex-1 text-center">Reps</div>
                                             <div className="flex-1 text-center flex items-center justify-center gap-1">RPE <RPEInfoPopover /></div>
                                         </>
@@ -566,13 +612,17 @@ export function WorkoutLogger() {
                                             {set.isPR ? <Trophy className="w-4 h-4 text-yellow-500 mx-auto" /> : setIndex + 1}
                                         </div>
                                         <div className="hidden sm:block w-20 text-center">
-                                            <span className="text-xs text-slate-700">{activeEx.previousBest > 0 ? `${activeEx.previousBest}` : '-'}</span>
+                                            <span className="text-xs text-slate-700">{activeEx.previousBest > 0 ? displayPR : '-'}</span>
                                         </div>
 
                                         {isStrength ? (
                                             <>
                                                 <div className="flex-1">
                                                     <Input inputMode="decimal" type="number" placeholder="0" value={set.weight} onChange={e => updateSet(activeEx.id, set.id, 'weight', e.target.value)} disabled={set.completed} className={`h-11 text-base text-center bg-slate-900 border-slate-800 px-1 ${set.isPR ? 'text-yellow-400 font-bold' : ''}`} />
+                                                    {isBarbell && set.weight && (() => {
+                                                        const plates = calculatePlates(parseFloat(set.weight) || 0)
+                                                        return plates ? <p className="text-[10px] text-slate-500 text-center mt-0.5">{plates}</p> : null
+                                                    })()}
                                                 </div>
                                                 <div className="flex-1">
                                                     <Input inputMode="numeric" type="number" placeholder="0" value={set.reps} onChange={e => updateSet(activeEx.id, set.id, 'reps', e.target.value)} disabled={set.completed} className="h-11 text-base text-center bg-slate-900 border-slate-800 px-1" />

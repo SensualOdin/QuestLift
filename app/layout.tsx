@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Cinzel } from "next/font/google";
 import "./globals.css";
+import { ServiceWorkerRegister } from "@/components/sw-register";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const cinzel = Cinzel({ subsets: ["latin"], weight: ["400", "700", "900"], variable: "--font-cinzel" });
@@ -36,6 +37,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
       </head>
       <body className={`${inter.variable} ${cinzel.variable} font-sans bg-slate-950 text-slate-50 antialiased min-h-screen overscroll-none`}>
+        <ServiceWorkerRegister />
         {children}
       </body>
     </html>

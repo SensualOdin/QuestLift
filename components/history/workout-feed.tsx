@@ -7,11 +7,13 @@ import { fetchFullWorkoutHistory } from "@/lib/supabase/data-hooks"
 import { useUserStore } from "@/lib/store/user-store"
 import { format, differenceInMinutes, parseISO } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
+import { calculatePlates } from "@/lib/utils/plates"
 
 interface FormattedExercise {
     name: string
     sets: number
     topWeight: number | string
+    equipment: string | null
 }
 
 interface FormattedWorkout {
@@ -45,12 +47,13 @@ export function WorkoutFeed() {
                 const minsStr = `${mins % 60}m`
 
                 // Group sets by exercise
-                const exerciseMap = new Map<string, { sets: number, topWeight: number }>()
+                const exerciseMap = new Map<string, { sets: number, topWeight: number, equipment: string | null }>()
                 let prs = 0
 
                 if (Array.isArray(workout.workout_sets)) {
                     workout.workout_sets.forEach((set: any) => {
                         const exName = set.exercises?.name || 'Unknown Exercise'
+                        const equipment = set.exercises?.equipment || null
                         const weight = set.weight || 0
 
                         if (set.is_pr) prs++
@@ -59,12 +62,14 @@ export function WorkoutFeed() {
                             const current = exerciseMap.get(exName)!
                             exerciseMap.set(exName, {
                                 sets: current.sets + 1,
-                                topWeight: Math.max(current.topWeight, weight)
+                                topWeight: Math.max(current.topWeight, weight),
+                                equipment: current.equipment
                             })
                         } else {
                             exerciseMap.set(exName, {
                                 sets: 1,
-                                topWeight: weight
+                                topWeight: weight,
+                                equipment
                             })
                         }
                     })
@@ -73,7 +78,8 @@ export function WorkoutFeed() {
                 const exercises: FormattedExercise[] = Array.from(exerciseMap.entries()).map(([name, data]) => ({
                     name,
                     sets: data.sets,
-                    topWeight: data.topWeight > 0 ? data.topWeight : 'Bodyweight'
+                    topWeight: data.topWeight > 0 ? data.topWeight : 'Bodyweight',
+                    equipment: data.equipment
                 }))
 
                 return {
@@ -131,12 +137,23 @@ export function WorkoutFeed() {
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 text-sm text-slate-400 mt-2">
-                                        {workout.exercises.map((ex, i) => (
-                                            <span key={i} className="bg-slate-950 px-2 py-1 rounded-md border border-slate-800">
-                                                <span className="text-slate-300">{ex.sets}x</span> {ex.name}
-                                                <span className="text-slate-500 text-xs ml-1">({ex.topWeight}{typeof ex.topWeight === 'number' ? 'lb' : ''})</span>
-                                            </span>
-                                        ))}
+                                        {workout.exercises.map((ex, i) => {
+                                            const isDumbbell = ex.equipment === 'Dumbbell'
+                                            const isBarbell = ex.equipment === 'Barbell'
+                                            const displayWeight = typeof ex.topWeight === 'number'
+                                                ? (isDumbbell ? `${ex.topWeight / 2}lb ea.` : `${ex.topWeight}lb`)
+                                                : ex.topWeight
+                                            const plates = isBarbell && typeof ex.topWeight === 'number'
+                                                ? calculatePlates(ex.topWeight)
+                                                : null
+                                            return (
+                                                <span key={i} className="bg-slate-950 px-2 py-1 rounded-md border border-slate-800">
+                                                    <span className="text-slate-300">{ex.sets}x</span> {ex.name}
+                                                    <span className="text-slate-500 text-xs ml-1">({displayWeight})</span>
+                                                    {plates && <span className="text-slate-600 text-[10px] ml-1">[{plates}]</span>}
+                                                </span>
+                                            )
+                                        })}
                                     </div>
                                 </div>
 
