@@ -166,7 +166,7 @@ export default function ShopPage() {
                     <h1 className="text-2xl font-bold text-white flex items-center gap-2 font-cinzel">
                         <ShoppingBag className="w-6 h-6 text-amber-400" /> Shop
                     </h1>
-                    <p className="text-sm text-slate-500 mt-1">Spend your hard-earned Iron Scraps</p>
+                    <p className="text-sm text-slate-400 mt-1">Spend your hard-earned Iron Scraps</p>
                 </div>
                 <div className="bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2 flex items-center gap-2">
                     <Coins className="w-5 h-5 text-yellow-500" />
@@ -186,13 +186,13 @@ export default function ShopPage() {
                             className={`relative flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${
                                 isActive
                                     ? 'bg-indigo-500/20 text-indigo-400'
-                                    : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/40'
+                                    : 'text-slate-400 hover:text-slate-300 hover:bg-slate-800/40'
                             }`}
                         >
                             <Icon className="w-4 h-4" />
                             <span className="hidden sm:inline">{tab.label}</span>
                             <span className="sm:hidden text-xs">{tab.label}</span>
-                            <span className={`text-[10px] rounded-full px-1.5 py-0.5 ${isActive ? 'bg-indigo-500/30 text-indigo-300' : 'bg-slate-800 text-slate-500'}`}>
+                            <span className={`text-[11px] rounded-full px-1.5 py-0.5 ${isActive ? 'bg-indigo-500/30 text-indigo-300' : 'bg-slate-800 text-slate-400'}`}>
                                 {tab.count}
                             </span>
                             {isActive && (
@@ -225,7 +225,7 @@ export default function ShopPage() {
                                 { label: 'Accessories', items: accessories, slotIcon: Gem },
                             ].map(section => (
                                 <div key={section.label} className="space-y-3">
-                                    <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1 font-cinzel">
+                                    <h2 className="text-xs uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2 px-1 font-cinzel">
                                         <section.slotIcon className="w-3.5 h-3.5" /> {section.label}
                                     </h2>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -238,7 +238,7 @@ export default function ShopPage() {
 
                     {activeTab === 'consumables' && (
                         <div className="space-y-3">
-                            <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1 font-cinzel">
+                            <h2 className="text-xs uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2 px-1 font-cinzel">
                                 <FlaskRound className="w-3.5 h-3.5" /> Consumables
                             </h2>
                             <p className="text-xs text-slate-600 px-1">Single-use items. Can purchase multiples.</p>
@@ -251,7 +251,7 @@ export default function ShopPage() {
                     {activeTab === 'cosmetics' && (
                         <div className="space-y-6">
                             <div className="space-y-3">
-                                <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1 font-cinzel">
+                                <h2 className="text-xs uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2 px-1 font-cinzel">
                                     <Crown className="w-3.5 h-3.5" /> Titles
                                 </h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -269,9 +269,9 @@ export default function ShopPage() {
                                                                 <RarityIcon className={`w-4 h-4 flex-shrink-0 ${config.color}`} />
                                                                 <h3 className={`font-bold text-sm truncate ${config.color}`}>{item.name}</h3>
                                                             </div>
-                                                            <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{item.description}</p>
+                                                            <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{item.description}</p>
                                                         </div>
-                                                        <span className={`text-[9px] uppercase tracking-wider font-bold ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2`}>
+                                                        <span className={`text-[10px] uppercase tracking-wider font-bold ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2`}>
                                                             {item.rarity}
                                                         </span>
                                                     </div>
@@ -288,7 +288,8 @@ export default function ShopPage() {
                                                     ) : (
                                                         <Button
                                                             onClick={() => handlePurchase(item)}
-                                                            disabled={balance < item.cost || purchasing === item.id}
+                                                            loading={purchasing === item.id}
+                                                            disabled={balance < item.cost}
                                                             className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
                                                             size="sm"
                                                         >
@@ -304,7 +305,7 @@ export default function ShopPage() {
                             </div>
 
                             <div className="space-y-3">
-                                <h2 className="text-xs uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2 px-1 font-cinzel">
+                                <h2 className="text-xs uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2 px-1 font-cinzel">
                                     <Package className="w-3.5 h-3.5" /> Portrait Frames
                                 </h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -322,9 +323,9 @@ export default function ShopPage() {
                                                                 <RarityIcon className={`w-4 h-4 flex-shrink-0 ${config.color}`} />
                                                                 <h3 className={`font-bold text-sm truncate ${config.color}`}>{item.name}</h3>
                                                             </div>
-                                                            <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{item.description}</p>
+                                                            <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{item.description}</p>
                                                         </div>
-                                                        <span className={`text-[9px] uppercase tracking-wider font-bold ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2`}>
+                                                        <span className={`text-[10px] uppercase tracking-wider font-bold ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2`}>
                                                             {item.rarity}
                                                         </span>
                                                     </div>
@@ -345,7 +346,8 @@ export default function ShopPage() {
                                                     ) : (
                                                         <Button
                                                             onClick={() => handlePurchase(item)}
-                                                            disabled={balance < item.cost || purchasing === item.id}
+                                                            loading={purchasing === item.id}
+                                                            disabled={balance < item.cost}
                                                             className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
                                                             size="sm"
                                                         >
@@ -400,9 +402,9 @@ function renderEquipmentCard(
                             <RarityIcon className={`w-4 h-4 flex-shrink-0 ${config.color}`} />
                             <h3 className={`font-bold text-sm truncate ${config.color}`}>{eq.name}</h3>
                         </div>
-                        <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{eq.description}</p>
+                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{eq.description}</p>
                     </div>
-                    <span className={`text-[9px] uppercase tracking-wider font-bold ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2`}>
+                    <span className={`text-[10px] uppercase tracking-wider font-bold ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2`}>
                         {eq.rarity}
                     </span>
                 </div>
@@ -415,7 +417,8 @@ function renderEquipmentCard(
                     ) : (
                         <Button
                             onClick={() => onBuy(eq)}
-                            disabled={balance < eq.cost || purchasing === eq.id}
+                            loading={purchasing === eq.id}
+                            disabled={balance < eq.cost}
                             className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
                             size="sm"
                         >

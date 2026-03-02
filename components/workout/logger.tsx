@@ -83,7 +83,7 @@ function RPEInfoPopover() {
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <button className="inline-flex items-center justify-center text-slate-500 hover:text-indigo-400 transition-colors">
+                <button aria-label="RPE scale information" className="inline-flex items-center justify-center text-slate-400 hover:text-indigo-400 transition-colors min-w-[44px] min-h-[44px] -m-3">
                     <Info className="w-3 h-3" />
                 </button>
             </PopoverTrigger>
@@ -532,9 +532,9 @@ export function WorkoutLogger() {
                     </div>
 
                     <div className={`border rounded-xl px-3 py-1.5 flex items-center gap-2 transition-colors shrink-0 ${timerEndTime !== null ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-900 border-slate-800'}`}>
-                        <Timer className={`w-4 h-4 ${timerEndTime !== null ? 'text-indigo-400 animate-pulse' : 'text-slate-500'}`} />
+                        <Timer className={`w-4 h-4 ${timerEndTime !== null ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
                         <div className="flex flex-col">
-                            <span className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold leading-tight">Rest</span>
+                            <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold leading-tight">Rest</span>
                             <span className={`font-mono text-sm font-bold leading-tight ${timerEndTime !== null ? 'text-indigo-400' : 'text-slate-300'}`}>
                                 {formatTime(timerDisplay)}
                             </span>
@@ -573,13 +573,13 @@ export function WorkoutLogger() {
                                         </div>
                                     </div>
                                 </div>
-                                <Button variant="ghost" size="icon" onClick={() => removeExercise(activeEx.id)} className="text-slate-500 hover:text-red-400 hover:bg-red-400/10">
+                                <Button variant="ghost" size="icon" aria-label="Remove exercise" onClick={() => removeExercise(activeEx.id)} className="text-slate-400 hover:text-red-400 hover:bg-red-400/10">
                                     <Trash2 className="w-4 h-4" />
                                 </Button>
                             </CardHeader>
                             <CardContent className="p-2 sm:p-4 space-y-2">
                                 {/* Column headers - mobile: compact, desktop: full */}
-                                <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold text-slate-500 px-1 mb-1">
+                                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-semibold text-slate-400 px-1 mb-1">
                                     <div className="w-8 text-center hidden sm:block">Set</div>
                                     <div className="hidden sm:block w-20 text-center">Prev</div>
                                     {isStrength ? (
@@ -602,6 +602,7 @@ export function WorkoutLogger() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
+                                            aria-label="Delete set"
                                             onClick={() => deleteSet(activeEx.id, set.id)}
                                             disabled={set.completed}
                                             className="h-8 w-8 shrink-0 text-slate-600 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-30"
@@ -621,7 +622,7 @@ export function WorkoutLogger() {
                                                     <Input inputMode="decimal" type="number" placeholder="0" value={set.weight} onChange={e => updateSet(activeEx.id, set.id, 'weight', e.target.value)} disabled={set.completed} className={`h-11 text-base text-center bg-slate-900 border-slate-800 px-1 ${set.isPR ? 'text-yellow-400 font-bold' : ''}`} />
                                                     {isBarbell && set.weight && (() => {
                                                         const plates = calculatePlates(parseFloat(set.weight) || 0)
-                                                        return plates ? <p className="text-[10px] text-slate-500 text-center mt-0.5">{plates}</p> : null
+                                                        return plates ? <p className="text-xs text-slate-400 text-center mt-0.5">{plates}</p> : null
                                                     })()}
                                                 </div>
                                                 <div className="flex-1">
@@ -642,7 +643,7 @@ export function WorkoutLogger() {
                                             </>
                                         )}
 
-                                        <Button variant={set.completed ? "default" : "secondary"} size="icon" onClick={() => {
+                                        <Button variant={set.completed ? "default" : "secondary"} size="icon" aria-label={set.completed ? "Undo set completion" : "Mark set complete"} onClick={() => {
                                             if (!set.completed) {
                                                 setPulsingSetIds(prev => new Set(prev).add(set.id))
                                                 setTimeout(() => setPulsingSetIds(prev => { const next = new Set(prev); next.delete(set.id); return next }), 500)
@@ -690,7 +691,7 @@ export function WorkoutLogger() {
 
             {/* Complete Workout Action - sticky on mobile */}
             <div className="fixed bottom-16 left-0 right-0 z-40 p-3 bg-slate-950/95 backdrop-blur-md border-t border-slate-800/60 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:pt-4 pb-safe">
-                <Button size="lg" disabled={isSaving || workoutExercises.length === 0} onClick={finishWorkout} className="w-full sm:w-auto px-8 py-6 sm:py-4 font-bold shadow-lg text-white text-base bg-indigo-600 active:bg-indigo-700 hover:bg-indigo-700 shadow-indigo-500/25">
+                <Button size="lg" loading={isSaving} disabled={workoutExercises.length === 0} onClick={finishWorkout} className="w-full sm:w-auto px-8 py-6 sm:py-4 font-bold shadow-lg text-white text-base bg-indigo-600 active:bg-indigo-700 hover:bg-indigo-700 shadow-indigo-500/25">
                     {isSaving ? "Saving..." : "Complete Workout"}
                 </Button>
             </div>

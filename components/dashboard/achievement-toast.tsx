@@ -56,7 +56,7 @@ export function AchievementToast({ achievements, onDismiss }: AchievementToastPr
                 <div className="bg-slate-950 border-2 border-yellow-500/50 rounded-2xl p-4 shadow-2xl shadow-yellow-500/20 backdrop-blur-xl">
                     <button
                         onClick={onDismiss}
-                        className="absolute top-2 right-2 text-slate-500 hover:text-white p-1"
+                        className="absolute top-2 right-2 text-slate-400 hover:text-white p-1"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -70,7 +70,7 @@ export function AchievementToast({ achievements, onDismiss }: AchievementToastPr
                         </div>
 
                         <div className="flex-1">
-                            <p className="text-[10px] uppercase tracking-widest font-bold text-yellow-500 mb-0.5">
+                            <p className="text-[11px] uppercase tracking-widest font-bold text-yellow-500 mb-0.5">
                                 Achievement Unlocked!
                             </p>
                             <h4 className="font-bold text-white text-sm">{achievement.name}</h4>

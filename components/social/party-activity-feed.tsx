@@ -143,7 +143,7 @@ export function PartyActivityFeed() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-slate-500 italic text-center py-6">
+                    <p className="text-sm text-slate-400 italic text-center py-6">
                         No party activity yet. Be the first to log a workout!
                     </p>
                 </CardContent>
@@ -180,10 +180,10 @@ export function PartyActivityFeed() {
                                         {activity.message}
                                     </p>
                                     {activity.detail && (
-                                        <p className="text-xs text-slate-500 mt-0.5">{activity.detail}</p>
+                                        <p className="text-xs text-slate-400 mt-0.5">{activity.detail}</p>
                                     )}
                                 </div>
-                                <span className="text-[10px] text-slate-600 flex-shrink-0 mt-1">{timeAgo}</span>
+                                <span className="text-xs text-slate-600 flex-shrink-0 mt-1">{timeAgo}</span>
                             </div>
                         )
                     })}

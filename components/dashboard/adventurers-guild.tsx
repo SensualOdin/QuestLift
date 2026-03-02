@@ -57,7 +57,7 @@ export function AdventurersGuild() {
                         <Scroll className="w-5 h-5 text-amber-400" />
                         <span className="text-amber-200">Adventurer&apos;s Guild</span>
                     </CardTitle>
-                    <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 uppercase tracking-wider">
+                    <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-600 uppercase tracking-wider">
                         <Clock className="w-2.5 h-2.5" />
                         Resets in {getResetHours()}
                     </span>
@@ -84,7 +84,7 @@ export function AdventurersGuild() {
                                     <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{bounty.description}</p>
                                 </div>
                                 {bounty.completed && (
-                                    <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider ml-2 shrink-0">
+                                    <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 uppercase tracking-wider ml-2 shrink-0">
                                         <CheckCircle2 className="w-3.5 h-3.5" />
                                         Completed
                                     </span>
@@ -102,16 +102,16 @@ export function AdventurersGuild() {
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-400/80">
+                                        <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-400/80">
                                             <Sparkles className="w-3 h-3" />
                                             {bounty.rewardXP} XP
                                         </span>
-                                        <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-400">
+                                        <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400">
                                             <Hammer className="w-3 h-3" />
                                             {bounty.rewardScraps} Scraps
                                         </span>
                                     </div>
-                                    <span className="text-[10px] text-slate-500 font-semibold">
+                                    <span className="text-[11px] text-slate-400 font-semibold">
                                         {bounty.progress.toLocaleString()} / {bounty.total.toLocaleString()}
                                     </span>
                                 </div>
@@ -120,7 +120,7 @@ export function AdventurersGuild() {
                     )
                 })}
                 {bounties.length === 0 && (
-                    <p className="text-sm text-slate-500 italic text-center py-4">No bounties available today.</p>
+                    <p className="text-sm text-slate-400 italic text-center py-4">No bounties available today.</p>
                 )}
             </CardContent>
         </GameCard>

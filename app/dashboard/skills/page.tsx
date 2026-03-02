@@ -165,7 +165,7 @@ export default function SkillTreePage() {
             <div className="max-w-4xl mx-auto px-4 pb-28 sm:pb-8">
                 <Card className="bg-slate-900/80 border-slate-800">
                     <CardContent className="p-8 text-center">
-                        <Sparkles className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                        <Sparkles className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                         <h2 className="text-xl font-bold text-white mb-2">Choose a Class First</h2>
                         <p className="text-slate-400">Select a class from the Inn to unlock your skill tree.</p>
                     </CardContent>
@@ -216,14 +216,14 @@ export default function SkillTreePage() {
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className={`text-2xl font-bold ${remainingPoints > 0 ? colors.text : 'text-slate-500'}`}>
+                            <p className={`text-2xl font-bold ${remainingPoints > 0 ? colors.text : 'text-slate-400'}`}>
                                 {remainingPoints}
                             </p>
-                            <p className="text-slate-500 text-xs">{totalAllocated} / {availablePoints} used</p>
+                            <p className="text-slate-400 text-xs">{totalAllocated} / {availablePoints} used</p>
                         </div>
                     </div>
                     {availablePoints === 0 && (
-                        <p className="text-slate-500 text-xs mt-3 text-center">
+                        <p className="text-slate-400 text-xs mt-3 text-center">
                             Reach level 10 to earn your first skill point.
                         </p>
                     )}
@@ -294,8 +294,8 @@ export default function SkillTreePage() {
                                                     status === 'allocated' ? colors.primary : 'text-slate-400'
                                                 }`} />
                                             )}
-                                            <span className={`text-[9px] sm:text-[10px] font-semibold leading-tight text-center px-0.5 ${
-                                                status === 'allocated' ? 'text-white' : 'text-slate-500'
+                                            <span className={`text-[10px] sm:text-[11px] font-semibold leading-tight text-center px-0.5 ${
+                                                status === 'allocated' ? 'text-white' : 'text-slate-400'
                                             }`}>
                                                 {node.name.length > 10 ? node.name.slice(0, 9) + '..' : node.name}
                                             </span>
@@ -304,7 +304,7 @@ export default function SkillTreePage() {
                                             <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center ${
                                                 status === 'allocated'
                                                     ? `${colors.bg.replace('/10', '/80')} ${colors.primary} border ${colors.border}`
-                                                    : 'bg-slate-800 text-slate-500 border border-slate-700'
+                                                    : 'bg-slate-800 text-slate-400 border border-slate-700'
                                             }`}>
                                                 {node.tier}
                                             </span>
@@ -367,7 +367,7 @@ export default function SkillTreePage() {
                                                 return (
                                                     <Button
                                                         onClick={() => handleAllocate(selectedNode)}
-                                                        disabled={!!allocating}
+                                                        loading={allocating === selectedNode.id}
                                                         className={`${colors.bg} ${colors.text} hover:opacity-90 border ${colors.border}`}
                                                         variant="outline"
                                                     >
@@ -376,7 +376,7 @@ export default function SkillTreePage() {
                                                 )
                                             }
                                             return (
-                                                <div className="flex items-center gap-2 text-slate-500">
+                                                <div className="flex items-center gap-2 text-slate-400">
                                                     <Lock className="w-4 h-4" />
                                                     <span className="text-sm">
                                                         {remainingPoints <= 0
@@ -399,7 +399,7 @@ export default function SkillTreePage() {
             {nodes.length === 0 && !loading && (
                 <Card className="bg-slate-900/80 border-slate-800 mt-6">
                     <CardContent className="p-8 text-center">
-                        <Sparkles className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                        <Sparkles className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                         <h2 className="text-xl font-bold text-white mb-2">Skill Tree Coming Soon</h2>
                         <p className="text-slate-400">No skill tree data found for {className}. Check back later.</p>
                     </CardContent>

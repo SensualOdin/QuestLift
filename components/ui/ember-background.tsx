@@ -1,6 +1,10 @@
 "use client"
 
+import { useReducedMotion } from "@/lib/utils/motion"
+
 export function EmberBackground() {
+    const reducedMotion = useReducedMotion()
+
     const particles = Array.from({ length: 24 }, (_, i) => ({
         id: i,
         left: `${(i * 4.3 + 7) % 100}%`,
@@ -26,8 +30,8 @@ export function EmberBackground() {
                 backgroundSize: '256px 256px',
             }} />
 
-            {/* Ember particles */}
-            {particles.map((p) => (
+            {/* Ember particles — hidden when reduced motion is preferred */}
+            {!reducedMotion && particles.map((p) => (
                 <div
                     key={p.id}
                     className={`absolute rounded-full ${p.color}`}

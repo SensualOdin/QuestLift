@@ -4,9 +4,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, Dumbbell, Users, ShoppingBag, Package, GitBranch, Swords } from "lucide-react"
 import { motion } from "framer-motion"
+import { useReducedMotion } from "@/lib/utils/motion"
 
 export function MainNav() {
     const pathname = usePathname()
+    const reducedMotion = useReducedMotion()
 
     const navItems = [
         { href: "/dashboard", label: "Inn", icon: Home },
@@ -30,16 +32,16 @@ export function MainNav() {
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`relative flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 sm:py-4 px-1.5 sm:px-4 py-2 min-w-[44px] transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-500 active:text-slate-300'}`}
+                                className={`relative flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 sm:py-4 px-1.5 sm:px-4 py-2.5 min-w-[44px] min-h-[44px] transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-400 active:text-slate-300'}`}
                             >
                                 <Icon className="w-5 h-5 sm:w-4 sm:h-4" />
-                                <span className="text-[10px] sm:text-xs font-semibold tracking-wide">{item.label}</span>
+                                <span className="text-[11px] sm:text-xs font-semibold tracking-wide">{item.label}</span>
 
                                 {isActive && (
                                     <motion.div
-                                        layoutId="nav-indicator"
+                                        layoutId={reducedMotion ? undefined : "nav-indicator"}
                                         className="absolute -top-2 sm:-bottom-[1px] sm:top-auto left-1/2 sm:left-0 -translate-x-1/2 sm:translate-x-0 w-6 sm:w-full h-0.5 sm:h-[2px] bg-indigo-500 rounded-full"
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                        transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 30 }}
                                     />
                                 )}
                             </Link>

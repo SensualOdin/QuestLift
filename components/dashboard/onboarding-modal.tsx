@@ -62,7 +62,7 @@ export function OnboardingModal({ isOpen, onClose, userId, currentName }: Onboar
             </div>
 
             <div className="space-y-2">
-                <label className="text-xs uppercase tracking-wider font-semibold text-slate-500">Your Name</label>
+                <label className="text-xs uppercase tracking-wider font-semibold text-slate-400">Your Name</label>
                 <Input
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
@@ -125,7 +125,7 @@ export function OnboardingModal({ isOpen, onClose, userId, currentName }: Onboar
             >
                 Got It <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-            <button onClick={markComplete} className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors py-1">
+            <button onClick={markComplete} className="w-full text-sm text-slate-400 hover:text-slate-300 transition-colors py-1">
                 Skip
             </button>
         </motion.div>,
@@ -148,7 +148,7 @@ export function OnboardingModal({ isOpen, onClose, userId, currentName }: Onboar
             >
                 Start First Workout <Dumbbell className="w-5 h-5 ml-2" />
             </Button>
-            <button onClick={markComplete} className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors py-1">
+            <button onClick={markComplete} className="w-full text-sm text-slate-400 hover:text-slate-300 transition-colors py-1">
                 I'll explore first
             </button>
         </motion.div>

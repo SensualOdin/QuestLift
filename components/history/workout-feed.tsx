@@ -124,13 +124,13 @@ export function WorkoutFeed() {
                                             {workout.name}
                                         </h3>
                                         <div className="flex flex-wrap items-center gap-4 mt-1">
-                                            <span className="text-xs text-slate-500 flex items-center gap-1">
+                                            <span className="text-xs text-slate-400 flex items-center gap-1">
                                                 <Calendar className="w-3.5 h-3.5" /> {workout.date}
                                             </span>
-                                            <span className="text-xs text-slate-500 flex items-center gap-1">
+                                            <span className="text-xs text-slate-400 flex items-center gap-1">
                                                 <Clock className="w-3.5 h-3.5" /> {workout.duration}
                                             </span>
-                                            <span className="text-xs text-slate-500 flex items-center gap-1">
+                                            <span className="text-xs text-slate-400 flex items-center gap-1">
                                                 <Dumbbell className="w-3.5 h-3.5" /> {workout.volume.toLocaleString()} lbs
                                             </span>
                                         </div>
@@ -149,8 +149,8 @@ export function WorkoutFeed() {
                                             return (
                                                 <span key={i} className="bg-slate-950 px-2 py-1 rounded-md border border-slate-800">
                                                     <span className="text-slate-300">{ex.sets}x</span> {ex.name}
-                                                    <span className="text-slate-500 text-xs ml-1">({displayWeight})</span>
-                                                    {plates && <span className="text-slate-600 text-[10px] ml-1">[{plates}]</span>}
+                                                    <span className="text-slate-400 text-xs ml-1">({displayWeight})</span>
+                                                    {plates && <span className="text-slate-600 text-xs ml-1">[{plates}]</span>}
                                                 </span>
                                             )
                                         })}
@@ -171,7 +171,7 @@ export function WorkoutFeed() {
                         </Card>
                     ))
                 ) : (
-                    <div className="py-12 text-center text-slate-500 bg-slate-900/20 rounded-xl border border-dashed border-slate-800">
+                    <div className="py-12 text-center text-slate-400 bg-slate-900/20 rounded-xl border border-dashed border-slate-800">
                         <Dumbbell className="w-8 h-8 opacity-20 mx-auto mb-3" />
                         <p>No workouts recorded yet.</p>
                     </div>

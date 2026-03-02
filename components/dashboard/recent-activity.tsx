@@ -52,7 +52,7 @@ export function RecentActivity() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-slate-500 italic text-center py-4">No recent activity. Time to hit the iron!</p>
+                    <p className="text-sm text-slate-400 italic text-center py-4">No recent activity. Time to hit the iron!</p>
                 </CardContent>
             </GameCard>
         )
@@ -76,7 +76,7 @@ export function RecentActivity() {
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
                                         <h4 className="font-semibold text-slate-200">{activity.name || 'Workout Session'}</h4>
-                                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
+                                        <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
                                             {'Standard'}
                                         </span>
                                     </div>

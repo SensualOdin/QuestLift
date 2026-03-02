@@ -83,7 +83,7 @@ export function ClassSelectionModal({ isOpen, onSelectClass }: { isOpen: boolean
                                     <cls.icon className="w-8 h-8" />
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-200 mb-1">{cls.name}</h3>
-                                <span className={`text-[10px] uppercase tracking-widest font-bold ${cls.color} mb-3`}>
+                                <span className={`text-[11px] uppercase tracking-widest font-bold ${cls.color} mb-3`}>
                                     Specialty: {cls.stat}
                                 </span>
                                 <p className="text-xs text-slate-400 leading-relaxed">

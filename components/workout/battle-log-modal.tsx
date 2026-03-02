@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Sword, Zap, Flame, Trophy, Coins, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useReducedMotion } from "@/lib/utils/motion"
 import type { BattleLogEntry } from "@/lib/supabase/data-hooks"
 
 interface BattleLogModalProps {
@@ -27,6 +28,7 @@ export function BattleLogModal({
     streakCount,
     ironScrapsEarned,
 }: BattleLogModalProps) {
+    const reducedMotion = useReducedMotion()
     const [visibleLines, setVisibleLines] = useState(0)
     const [showSummary, setShowSummary] = useState(false)
 
@@ -45,6 +47,13 @@ export function BattleLogModal({
             return
         }
 
+        // Skip typewriter effect when reduced motion is preferred
+        if (reducedMotion) {
+            setVisibleLines(totalLines)
+            setShowSummary(true)
+            return
+        }
+
         // Typewriter effect: reveal one line every 400ms
         if (visibleLines < totalLines) {
             const timer = setTimeout(() => setVisibleLines(v => v + 1), 400)
@@ -53,7 +62,7 @@ export function BattleLogModal({
             const timer = setTimeout(() => setShowSummary(true), 600)
             return () => clearTimeout(timer)
         }
-    }, [isOpen, visibleLines, totalLines, showSummary])
+    }, [isOpen, visibleLines, totalLines, showSummary, reducedMotion])
 
     if (!isOpen) return null
 
@@ -81,7 +90,7 @@ export function BattleLogModal({
                             <Sword className="w-10 h-10 text-red-400 mx-auto" />
                         </motion.div>
                         <h2 className="text-xl font-bold text-white tracking-tight">Battle Complete</h2>
-                        <p className="text-xs text-slate-500 uppercase tracking-widest">Workout Recap</p>
+                        <p className="text-[11px] text-slate-400 uppercase tracking-widest">Workout Recap</p>
                     </div>
 
                     {/* Damage Lines */}
@@ -114,7 +123,7 @@ export function BattleLogModal({
                                                     {entry.volume.toLocaleString()} DMG
                                                 </span>
                                                 {' '}
-                                                <span className="text-slate-500">
+                                                <span className="text-slate-400">
                                                     ({entry.sets}x @ {entry.weight}lbs)
                                                 </span>
                                             </span>
@@ -160,7 +169,7 @@ export function BattleLogModal({
                                 <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 text-center">
                                     {hasStrength && (
                                         <>
-                                            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Total Damage</div>
+                                            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Total Damage</div>
                                             <div className="text-lg font-bold text-red-400 font-mono">
                                                 {strengthDamage.toLocaleString()}
                                             </div>
@@ -168,7 +177,7 @@ export function BattleLogModal({
                                     )}
                                     {hasCardio && (
                                         <>
-                                            <div className={`text-[10px] text-slate-500 uppercase tracking-wider ${hasStrength ? 'mt-1.5 pt-1.5 border-t border-slate-800/60' : ''}`}>Cardio</div>
+                                            <div className={`text-[11px] text-slate-400 uppercase tracking-wider ${hasStrength ? 'mt-1.5 pt-1.5 border-t border-slate-800/60' : ''}`}>Cardio</div>
                                             <div className="text-lg font-bold text-emerald-400 font-mono">
                                                 {cardioMinutes} min
                                             </div>
@@ -176,19 +185,19 @@ export function BattleLogModal({
                                     )}
                                     {!hasStrength && !hasCardio && (
                                         <>
-                                            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Total Damage</div>
+                                            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Total Damage</div>
                                             <div className="text-lg font-bold text-red-400 font-mono">0</div>
                                         </>
                                     )}
                                 </div>
                                 <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 text-center">
-                                    <div className="text-[10px] text-slate-500 uppercase tracking-wider">XP Earned</div>
+                                    <div className="text-[11px] text-slate-400 uppercase tracking-wider">XP Earned</div>
                                     <div className="text-lg font-bold text-indigo-400 font-mono">
                                         +{xpEarned}
                                     </div>
                                 </div>
                                 <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 text-center">
-                                    <div className="text-[10px] text-slate-500 uppercase tracking-wider flex items-center justify-center gap-1">
+                                    <div className="text-[11px] text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
                                         <Flame className="w-3 h-3" /> Streak
                                     </div>
                                     <div className="text-lg font-bold text-orange-400 font-mono">
@@ -196,7 +205,7 @@ export function BattleLogModal({
                                     </div>
                                 </div>
                                 <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 text-center">
-                                    <div className="text-[10px] text-slate-500 uppercase tracking-wider flex items-center justify-center gap-1">
+                                    <div className="text-[11px] text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
                                         <Coins className="w-3 h-3" /> Scraps
                                     </div>
                                     <div className="text-lg font-bold text-yellow-500 font-mono">

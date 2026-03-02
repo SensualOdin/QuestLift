@@ -37,7 +37,7 @@ export function RaidBoss() {
     if (!raid) {
         return (
             <Card className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl text-center p-8">
-                <Shield className="w-12 h-12 text-slate-500 mx-auto mb-4 opacity-50" />
+                <Shield className="w-12 h-12 text-slate-400 mx-auto mb-4 opacity-50" />
                 <h3 className="text-xl font-bold text-white mb-2">No Active Raid</h3>
                 <p className="text-slate-400 text-sm">Your party is currently resting. A new Raid Boss will spawn soon.</p>
             </Card>
@@ -109,12 +109,12 @@ export function RaidBoss() {
                         {(raid.boss_weakness || raid.boss_resistance) && (
                             <div className="flex gap-2 mt-2 flex-wrap">
                                 {raid.boss_weakness && (
-                                    <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 font-mono uppercase">
+                                    <span className="text-[11px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 font-mono uppercase">
                                         Weak: {raid.boss_weakness} (2x)
                                     </span>
                                 )}
                                 {raid.boss_resistance && (
-                                    <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30 font-mono uppercase">
+                                    <span className="text-[11px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30 font-mono uppercase">
                                         Resists: {raid.boss_resistance} (0.5x)
                                     </span>
                                 )}
@@ -147,7 +147,7 @@ export function RaidBoss() {
                                 style={{ width: `${shieldPercent}%` }}
                             />
                         </div>
-                        <p className="text-[10px] text-cyan-400/60 mt-1">
+                        <p className="text-[11px] text-cyan-400/60 mt-1">
                             {raid.shield_type === 'swift' ? 'Break with Cardio damage' : raid.shield_type === 'arcane' ? 'Break with Magic damage' : 'Break with Strength damage'}
                         </p>
                     </div>
@@ -185,11 +185,11 @@ export function RaidBoss() {
 
                 {/* Party Contributions */}
                 <div className="pt-2">
-                    <h4 className="text-xs uppercase tracking-widest font-bold text-slate-500 mb-3 border-b border-slate-800 pb-2">
+                    <h4 className="text-xs uppercase tracking-widest font-bold text-slate-400 mb-3 border-b border-slate-800 pb-2">
                         Damage Contributions
                     </h4>
                     {contributions.length === 0 ? (
-                        <p className="text-xs text-slate-500 italic">No damage dealt yet. Log a workout!</p>
+                        <p className="text-xs text-slate-400 italic">No damage dealt yet. Log a workout!</p>
                     ) : (
                         <div className="space-y-3">
                             {contributions.map((member: any, i: number) => (
@@ -199,7 +199,7 @@ export function RaidBoss() {
                                         <span className="text-slate-300 font-medium">{member.name}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-xs text-slate-500 font-mono">
+                                        <span className="text-xs text-slate-400 font-mono">
                                             {hpFull > 0 ? Math.round((member.dmg / hpFull) * 100) : 0}%
                                         </span>
                                         <span className="font-mono text-slate-200 font-bold w-20 text-right">

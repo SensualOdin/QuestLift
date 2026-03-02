@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useUserStore } from "@/lib/store/user-store"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -77,16 +78,22 @@ export function Header() {
                     <p className="text-slate-400 text-xs sm:text-base truncate">Welcome back, {user?.display_name || 'Adventurer'}</p>
                 </div>
 
+                <TooltipProvider delayDuration={300}>
                 <div className="flex items-center gap-2 sm:gap-4 bg-slate-900/50 p-1.5 sm:p-2 rounded-2xl border border-slate-800/80 backdrop-blur-md shrink-0">
-                    <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-amber-500/10 text-amber-400 rounded-xl font-medium text-xs sm:text-sm border border-amber-500/20">
-                        <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span>{user?.iron_scraps || 0}</span>
-                    </div>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-amber-500/10 text-amber-400 rounded-xl font-medium text-xs sm:text-sm border border-amber-500/20 cursor-default">
+                                <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <span>{user?.iron_scraps || 0}</span>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>Iron Scraps — spend in the Shop</TooltipContent>
+                    </Tooltip>
 
                     {/* Notifications Popover */}
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl relative">
+                            <Button variant="ghost" size="icon" aria-label="Notifications" className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl relative">
                                 <Bell className="w-5 h-5" />
                                 {hasNotifications && <span className="absolute top-1 right-2 w-2 h-2 bg-indigo-500 rounded-full border border-slate-900" />}
                             </Button>
@@ -95,7 +102,7 @@ export function Header() {
                             <div className="p-4 border-b border-slate-800/60 pb-3 relative overflow-hidden flex justify-between items-center">
                                 <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-transparent pointer-events-none" />
                                 <h4 className="font-semibold text-white relative z-10 flex items-center gap-2">
-                                    Notifications {hasNotifications && <span className="bg-indigo-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">New</span>}
+                                    Notifications {hasNotifications && <span className="bg-indigo-500 text-white text-[11px] px-1.5 py-0.5 rounded-full">New</span>}
                                 </h4>
                                 {hasNotifications && (
                                     <Button variant="ghost" size="sm" onClick={clearNotifications} className="h-6 px-2 text-xs text-slate-400 hover:text-white relative z-10">
@@ -113,12 +120,12 @@ export function Header() {
                                             <div>
                                                 <p className="text-sm font-medium text-slate-200">Welcome to QuestLift</p>
                                                 <p className="text-xs text-slate-400 mt-1">Visit your workout logger to start gaining XP.</p>
-                                                <p className="text-[10px] text-slate-500 mt-2">Just now</p>
+                                                <p className="text-[11px] text-slate-400 mt-2">Just now</p>
                                             </div>
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="p-8 text-center text-slate-500">
+                                    <div className="p-8 text-center text-slate-400">
                                         <Bell className="w-8 h-8 opacity-20 mx-auto mb-2" />
                                         <p className="text-sm">You are all caught up.</p>
                                     </div>
@@ -130,7 +137,7 @@ export function Header() {
                     {/* Settings Dropdown */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl">
+                            <Button variant="ghost" size="icon" aria-label="Settings menu" className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl">
                                 <Settings className="w-5 h-5" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -153,6 +160,7 @@ export function Header() {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
+                </TooltipProvider>
             </header>
 
             {/* Edit Profile Modal */}
@@ -174,7 +182,7 @@ export function Header() {
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setIsProfileOpen(false)} className="text-slate-400 hover:text-white hover:bg-slate-800">Cancel</Button>
-                        <Button onClick={handleSaveProfile} disabled={isSaving} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Button onClick={handleSaveProfile} loading={isSaving} className="bg-indigo-600 hover:bg-indigo-700 text-white">
                             {isSaving ? "Saving..." : "Save Changes"}
                         </Button>
                     </DialogFooter>
@@ -191,7 +199,7 @@ export function Header() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h4 className="font-semibold">Push Notifications</h4>
-                                <p className="text-xs text-slate-500">Receive alerts when Raid Bosses spawn.</p>
+                                <p className="text-xs text-slate-400">Receive alerts when Raid Bosses spawn.</p>
                             </div>
                             <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-400 hover:text-white pointer-events-none">
                                 Enabled
@@ -200,7 +208,7 @@ export function Header() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h4 className="font-semibold">Theme</h4>
-                                <p className="text-xs text-slate-500">The iron is always dark.</p>
+                                <p className="text-xs text-slate-400">The iron is always dark.</p>
                             </div>
                             <Button variant="outline" size="sm" className="bg-slate-900 border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300 pointer-events-none">
                                 Dark Mode

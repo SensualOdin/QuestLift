@@ -115,7 +115,7 @@ export function PartyRoster() {
     if (!party) {
         return (
             <Card className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl text-center p-8">
-                <Users className="w-12 h-12 text-slate-500 mx-auto mb-4 opacity-50" />
+                <Users className="w-12 h-12 text-slate-400 mx-auto mb-4 opacity-50" />
                 <h3 className="text-xl font-bold text-white mb-2">No Active Party</h3>
                 <p className="text-slate-400 text-sm mb-6">You must brave the dungeons alone, or form a party of adventurers.</p>
 
@@ -153,7 +153,7 @@ export function PartyRoster() {
             <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-800/60">
                 <CardTitle className="text-xl font-bold flex items-center gap-2">
                     <Users className="w-5 h-5 text-indigo-400" />
-                    {party.name || 'Your Party'} <span className="text-xs font-normal text-slate-500 ml-2">({roster.length}/5 Members)</span>
+                    {party.name || 'Your Party'} <span className="text-xs font-normal text-slate-400 ml-2">({roster.length}/5 Members)</span>
                 </CardTitle>
             </CardHeader>
 
@@ -178,7 +178,7 @@ export function PartyRoster() {
                                                 {mUser.display_name?.substring(0, 2).toUpperCase() || '??'}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="absolute -bottom-1 -right-1 bg-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded-md border border-slate-700 text-slate-300">
+                                        <div className="absolute -bottom-1 -right-1 bg-slate-900 text-[11px] font-bold px-1.5 py-0.5 rounded-md border border-slate-700 text-slate-300">
                                             Lvl {mUser.level || 1}
                                         </div>
                                     </div>

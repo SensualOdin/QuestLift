@@ -117,7 +117,7 @@ export default function AchievementsPage() {
                 </div>
                 <div className="text-right">
                     <div className="text-2xl font-bold text-yellow-500">{Math.round((earnedCount / Math.max(totalCount, 1)) * 100)}%</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Complete</div>
+                    <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Complete</div>
                 </div>
             </div>
 
@@ -133,13 +133,13 @@ export default function AchievementsPage() {
             <div className="flex gap-2">
                 <button
                     onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${filter === 'all' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-500 hover:text-slate-300'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${filter === 'all' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-400 hover:text-slate-300'}`}
                 >
                     All
                 </button>
                 <button
                     onClick={() => setFilter('prestige')}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${filter === 'prestige' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'text-slate-500 hover:text-slate-300'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${filter === 'prestige' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'text-slate-400 hover:text-slate-300'}`}
                 >
                     Prestige
                 </button>
@@ -186,7 +186,7 @@ export default function AchievementsPage() {
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className={`font-bold text-sm ${isEarned ? 'text-white' : 'text-slate-500'}`}>
+                                                    <h3 className={`font-bold text-sm ${isEarned ? 'text-white' : 'text-slate-400'}`}>
                                                         {achievement.name}
                                                     </h3>
                                                     <p className={`text-xs mt-0.5 ${isEarned ? 'text-slate-400' : 'text-slate-600'}`}>

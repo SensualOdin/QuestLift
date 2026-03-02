@@ -79,9 +79,9 @@ export function TemplatePicker({ onSelectTemplate, defaultOpen = true }: Templat
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 w-full text-left py-2 active:opacity-70 transition-opacity"
             >
-                <LayoutTemplate className="w-4 h-4 text-slate-500" />
+                <LayoutTemplate className="w-4 h-4 text-slate-400" />
                 <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex-1">Templates</span>
-                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
             </button>
 
             {isOpen && (
@@ -104,7 +104,7 @@ export function TemplatePicker({ onSelectTemplate, defaultOpen = true }: Templat
                                         <h4 className="font-semibold text-slate-200 text-sm group-hover:text-indigo-300 transition-colors">
                                             {template.name}
                                         </h4>
-                                        <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                                        <p className="text-[11px] text-slate-400 truncate mt-0.5">
                                             {template.exercises.map(e => e.name).join(' / ')}
                                         </p>
                                     </div>

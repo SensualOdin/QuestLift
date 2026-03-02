@@ -52,7 +52,7 @@ export function RoastReport() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                    <p className="text-sm text-slate-500 italic text-center py-4">
+                    <p className="text-sm text-slate-400 italic text-center py-4">
                         No roast reports yet. Complete a full week with your party to generate the first one.
                     </p>
                 </CardContent>

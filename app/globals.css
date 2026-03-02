@@ -52,6 +52,23 @@
   font-family: var(--font-cinzel), serif;
 }
 
+/* QuestLift design token utilities */
+@utility bg-ql-deep { background-color: var(--ql-bg-deep); }
+@utility bg-ql-card { background-color: var(--ql-bg-card); }
+@utility bg-ql-surface { background-color: var(--ql-bg-surface); }
+@utility border-ql-subtle { border-color: var(--ql-border-subtle); }
+@utility border-ql-default { border-color: var(--ql-border-default); }
+@utility text-ql-muted { color: var(--ql-text-muted); }
+@utility text-ql-subtle { color: var(--ql-text-subtle); }
+@utility text-ql-tank { color: var(--ql-tank); }
+@utility text-ql-rogue { color: var(--ql-rogue); }
+@utility text-ql-paladin { color: var(--ql-paladin); }
+@utility text-ql-wizard { color: var(--ql-wizard); }
+@utility text-ql-common { color: var(--ql-common); }
+@utility text-ql-rare { color: var(--ql-rare); }
+@utility text-ql-epic { color: var(--ql-epic); }
+@utility text-ql-legendary { color: var(--ql-legendary); }
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -119,6 +136,32 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* --- QuestLift Design Tokens --- */
+  /* Background tiers */
+  --ql-bg-deep: #020617;      /* slate-950 */
+  --ql-bg-card: #0f172a;      /* slate-900 */
+  --ql-bg-surface: #1e293b;   /* slate-800 */
+
+  /* Borders */
+  --ql-border-subtle: rgba(30, 41, 59, 0.6);  /* slate-800/60 */
+  --ql-border-default: #1e293b;                /* slate-800 */
+
+  /* Text */
+  --ql-text-muted: #94a3b8;   /* slate-400 — AA-passing */
+  --ql-text-subtle: #64748b;  /* slate-500 */
+
+  /* Class colors */
+  --ql-tank: #f87171;         /* red-400 */
+  --ql-rogue: #34d399;        /* emerald-400 */
+  --ql-paladin: #818cf8;      /* indigo-400 */
+  --ql-wizard: #c084fc;       /* purple-400 */
+
+  /* Rarity colors */
+  --ql-common: #94a3b8;       /* slate-400 */
+  --ql-rare: #60a5fa;         /* blue-400 */
+  --ql-epic: #c084fc;         /* purple-400 */
+  --ql-legendary: #facc15;    /* yellow-400 */
 }
 
 @layer base {
@@ -226,5 +269,15 @@ input[type="number"] {
   100% {
     transform: scale(2.5);
     opacity: 0;
+  }
+}
+
+/* --- Reduced Motion Support --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -1,8 +1,11 @@
 "use client"
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { motion } from "framer-motion"
+import { useReducedMotion } from "@/lib/utils/motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Sword, Shield, Wind, Flame, Sparkles } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { createClient } from "@/lib/supabase/client"
@@ -96,6 +99,7 @@ function getStreakColor(streak: number): string {
 
 export function UserProfile() {
     const { user, isLoading, fetchProfile, refreshProfile } = useUserStore()
+    const reducedMotion = useReducedMotion()
     const [showClassModal, setShowClassModal] = useState(false)
 
     useEffect(() => {
@@ -152,9 +156,9 @@ export function UserProfile() {
         <>
         <ClassSelectionModal isOpen={showClassModal} onSelectClass={handleClassSelect} />
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={reducedMotion ? { duration: 0 } : { duration: 0.5 }}
         >
             <Card className="border-slate-700/60 bg-gradient-to-b from-slate-900/80 to-slate-950/90 backdrop-blur-2xl overflow-hidden relative shadow-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                 {/* Decorative background glow */}
@@ -167,10 +171,12 @@ export function UserProfile() {
                         <div className="relative">
                             <div className="absolute inset-0 bg-indigo-500/10 rounded-2xl blur-xl pointer-events-none" />
                             <div className={`relative w-44 h-44 sm:w-52 sm:h-52 rounded-2xl overflow-hidden bg-slate-950 ${getFrameStyle(user.equipped_frame)}`}>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
+                                <Image
                                     src={charSrc}
                                     alt={tier}
+                                    width={208}
+                                    height={208}
+                                    priority
                                     className="w-full h-full object-contain"
                                 />
                             </div>
@@ -184,7 +190,7 @@ export function UserProfile() {
                         <div className="text-center pt-1">
                             <CardTitle className="text-xl sm:text-2xl font-bold text-white tracking-tight font-cinzel">{user.display_name}</CardTitle>
                             {user.equipped_title && (
-                                <p className="text-[10px] text-yellow-400/80 font-semibold uppercase tracking-wider mt-0.5">
+                                <p className="text-[11px] text-yellow-400/80 font-semibold uppercase tracking-wider mt-0.5">
                                     {user.equipped_title}
                                 </p>
                             )}
@@ -199,23 +205,23 @@ export function UserProfile() {
                     {/* XP Bar */}
                     <div>
                         <div className="flex justify-between text-sm mb-2 font-medium">
-                            <span className="text-slate-400 uppercase tracking-wider text-[10px]">Experience</span>
+                            <span className="text-slate-400 uppercase tracking-wider text-[11px]">Experience</span>
                             <span className="text-indigo-300 text-xs">{xpIntoCurrentLevel} / {xpNeeded} XP</span>
                         </div>
                         <div className="relative h-2.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
                             <motion.div
-                                initial={{ width: 0 }}
+                                initial={reducedMotion ? false : { width: 0 }}
                                 animate={{ width: `${progressPercent}%` }}
-                                transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                                transition={reducedMotion ? { duration: 0 } : { duration: 1, ease: "easeOut", delay: 0.2 }}
                                 className="absolute top-0 left-0 h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
                             />
                         </div>
                         <div className="flex justify-between mt-2">
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                            <p className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
                                 {xpNeeded - xpIntoCurrentLevel} XP to Level {level + 1}
                             </p>
                             {nextTier && (
-                                <p className="text-[10px] text-indigo-400/60 uppercase tracking-wider font-semibold">
+                                <p className="text-[11px] text-indigo-400/60 uppercase tracking-wider font-semibold">
                                     {nextTier.nextName} @ Lvl {nextTier.nextLevel}
                                 </p>
                             )}
@@ -223,45 +229,71 @@ export function UserProfile() {
                     </div>
 
                     {/* Attributes */}
+                    <TooltipProvider delayDuration={300}>
                     <div className="pt-4 border-t border-slate-800/60">
-                        <h4 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 mb-3 px-1 font-cinzel">Core Attributes</h4>
+                        <h4 className="text-[11px] uppercase tracking-widest font-semibold text-slate-400 mb-3 px-1 font-cinzel">Core Attributes</h4>
                         <div className="grid grid-cols-4 gap-2">
-                            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center">
-                                <div className="text-red-400 text-xs font-bold mb-1">STR</div>
-                                <div className="text-lg font-mono text-slate-200" title="Lifetime Volume">
-                                    {(user.str_volume_lifetime || 0) > 1000
-                                        ? `${((user.str_volume_lifetime || 0) / 1000).toFixed(1)}k`
-                                        : user.str_volume_lifetime || 0}
-                                </div>
-                            </div>
-                            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center">
-                                <div className="text-emerald-400 text-xs font-bold mb-1">DEX</div>
-                                <div className="text-lg font-mono text-slate-200" title="Lifetime Cardio Minutes">
-                                    {user.dex_minutes_lifetime || 0}
-                                </div>
-                            </div>
-                            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center">
-                                <div className="text-blue-400 text-xs font-bold mb-1">CON</div>
-                                <div className="text-lg font-mono text-slate-200" title="Lifetime Sets">
-                                    {user.con_sets_lifetime || 0}
-                                </div>
-                            </div>
-                            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center">
-                                <div className="text-purple-400 text-xs font-bold mb-1">WIS</div>
-                                <div className="text-lg font-mono text-slate-200" title="Lifetime Recovery Minutes">
-                                    {user.wis_minutes_lifetime || 0}
-                                </div>
-                            </div>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center cursor-default">
+                                        <div className="text-red-400 text-xs font-bold mb-1">STR</div>
+                                        <div className="text-lg font-mono text-slate-200">
+                                            {(user.str_volume_lifetime || 0) > 1000
+                                                ? `${((user.str_volume_lifetime || 0) / 1000).toFixed(1)}k`
+                                                : user.str_volume_lifetime || 0}
+                                        </div>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>Strength — Lifetime Volume (lbs)</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center cursor-default">
+                                        <div className="text-emerald-400 text-xs font-bold mb-1">DEX</div>
+                                        <div className="text-lg font-mono text-slate-200">
+                                            {user.dex_minutes_lifetime || 0}
+                                        </div>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>Dexterity — Lifetime Cardio Minutes</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center cursor-default">
+                                        <div className="text-blue-400 text-xs font-bold mb-1">CON</div>
+                                        <div className="text-lg font-mono text-slate-200">
+                                            {user.con_sets_lifetime || 0}
+                                        </div>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>Constitution — Lifetime Sets</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 text-center cursor-default">
+                                        <div className="text-purple-400 text-xs font-bold mb-1">WIS</div>
+                                        <div className="text-lg font-mono text-slate-200">
+                                            {user.wis_minutes_lifetime || 0}
+                                        </div>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>Wisdom — Lifetime Recovery Minutes</TooltipContent>
+                            </Tooltip>
                         </div>
                     </div>
 
                     {/* Streak & Inventory */}
                     <div className="space-y-2 pt-2">
                         <div className="flex items-center justify-between px-1">
-                            <span className="text-xs font-medium text-slate-400 flex items-center gap-2">
-                                <Flame className={`w-4 h-4 ${getStreakColor(user.current_streak || 0)}`} />
-                                Streak
-                            </span>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="text-xs font-medium text-slate-400 flex items-center gap-2 cursor-default">
+                                        <Flame className={`w-4 h-4 ${getStreakColor(user.current_streak || 0)}`} />
+                                        Streak
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Consecutive workout days</TooltipContent>
+                            </Tooltip>
                             <span className={`text-sm font-bold ${getStreakColor(user.current_streak || 0)}`}>
                                 {user.current_streak || 0} day{(user.current_streak || 0) !== 1 ? 's' : ''}
                             </span>
@@ -274,6 +306,7 @@ export function UserProfile() {
                             <span className="text-sm font-bold text-yellow-500">{user.iron_scraps || 0}</span>
                         </div>
                     </div>
+                    </TooltipProvider>
                 </CardContent>
             </Card>
         </motion.div>

@@ -43,12 +43,12 @@ export function ExerciseLibrary() {
                 </div>
 
                 <div className="relative w-full md:w-72">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                         placeholder="Search exercises..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-500 focus-visible:ring-indigo-500"
+                        className="pl-9 bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500"
                     />
                 </div>
             </div>
@@ -82,7 +82,7 @@ export function ExerciseLibrary() {
                                         {exercise.name}
                                     </h4>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800/80">
+                                        <span className="text-xs uppercase tracking-wider font-semibold text-slate-400 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800/80">
                                             {exercise.category}
                                         </span>
                                         <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -98,7 +98,7 @@ export function ExerciseLibrary() {
                         </Card>
                     ))
                 ) : (
-                    <div className="col-span-full py-12 text-center text-slate-500">
+                    <div className="col-span-full py-12 text-center text-slate-400">
                         <Dumbbell className="w-8 h-8 opacity-20 mx-auto mb-3" />
                         <p>No exercises found matching &quot;{searchQuery}&quot;.</p>
                     </div>

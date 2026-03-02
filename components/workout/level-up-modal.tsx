@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useReducedMotion } from "@/lib/utils/motion"
 
 interface LevelUpModalProps {
     isOpen: boolean
@@ -19,6 +20,7 @@ function getMilestoneText(level: number): string | null {
 }
 
 export function LevelUpModal({ isOpen, oldLevel, newLevel, onDismiss }: LevelUpModalProps) {
+    const reducedMotion = useReducedMotion()
     const [showParticles, setShowParticles] = useState(false)
 
     useEffect(() => {
@@ -42,8 +44,8 @@ export function LevelUpModal({ isOpen, oldLevel, newLevel, onDismiss }: LevelUpM
                 className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center cursor-pointer"
             >
                 <div className="text-center space-y-4 relative">
-                    {/* Particle sparkles */}
-                    {showParticles && (
+                    {/* Particle sparkles — skip when reduced motion */}
+                    {showParticles && !reducedMotion && (
                         <>
                             {[...Array(12)].map((_, i) => (
                                 <motion.div
@@ -105,7 +107,7 @@ export function LevelUpModal({ isOpen, oldLevel, newLevel, onDismiss }: LevelUpM
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 1.5 }}
-                        className="text-xs text-slate-500 mt-4"
+                        className="text-xs text-slate-400 mt-4"
                     >
                         Tap to continue
                     </motion.div>

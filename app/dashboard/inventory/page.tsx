@@ -108,7 +108,7 @@ export default function InventoryPage() {
                     <h1 className="text-2xl font-bold text-white flex items-center gap-2 font-cinzel">
                         <Package className="w-6 h-6 text-amber-400" /> Inventory
                     </h1>
-                    <p className="text-sm text-slate-500 mt-1">Manage your equipment and loot</p>
+                    <p className="text-sm text-slate-400 mt-1">Manage your equipment and loot</p>
                 </div>
                 <div className="bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2 flex items-center gap-2">
                     <Coins className="w-5 h-5 text-yellow-500" />
@@ -145,7 +145,7 @@ export default function InventoryPage() {
 
             {/* Equipment Slots */}
             <div className="space-y-3">
-                <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1 font-cinzel">Equipped Gear</h2>
+                <h2 className="text-[11px] uppercase tracking-widest font-semibold text-slate-400 px-1 font-cinzel">Equipped Gear</h2>
                 <div className="grid grid-cols-3 gap-3">
                     {['weapon', 'armor', 'accessory'].map(slot => {
                         const eq = equipped(slot)
@@ -168,11 +168,11 @@ export default function InventoryPage() {
                                     ) : (
                                         <SlotIcon className={`w-5 h-5 mx-auto ${config?.color || 'text-slate-600'}`} />
                                     )}
-                                    <p className="text-[10px] uppercase tracking-wider text-slate-500">{slot}</p>
+                                    <p className="text-[11px] uppercase tracking-wider text-slate-400">{slot}</p>
                                     {eq ? (
                                         <>
                                             <p className={`text-sm font-bold ${config?.color || 'text-white'} truncate`}>{eq.equipment.name}</p>
-                                            <p className="text-[10px] text-slate-400 truncate">{eq.equipment.description}</p>
+                                            <p className="text-[11px] text-slate-400 truncate">{eq.equipment.description}</p>
                                             <Button size="sm" variant="outline" className="w-full border-slate-700 text-xs" onClick={() => handleUnequip(eq)}>
                                                 Unequip
                                             </Button>
@@ -190,7 +190,7 @@ export default function InventoryPage() {
             {/* Loot Boxes */}
             {unopenedBoxes.length > 0 && (
                 <div className="space-y-3">
-                    <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1 font-cinzel">Loot Boxes</h2>
+                    <h2 className="text-[11px] uppercase tracking-widest font-semibold text-slate-400 px-1 font-cinzel">Loot Boxes</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {unopenedBoxes.map(lb => (
                             <motion.div
@@ -215,12 +215,12 @@ export default function InventoryPage() {
 
             {/* Inventory Grid */}
             <div className="space-y-3">
-                <h2 className="text-[10px] uppercase tracking-widest font-semibold text-slate-500 px-1 font-cinzel">All Equipment ({items.length})</h2>
+                <h2 className="text-[11px] uppercase tracking-widest font-semibold text-slate-400 px-1 font-cinzel">All Equipment ({items.length})</h2>
                 {items.length === 0 ? (
                     <Card className="border-slate-800 bg-slate-900/40">
                         <CardContent className="p-8 text-center">
                             <Package className="w-10 h-10 mx-auto text-slate-700 mb-2" />
-                            <p className="text-sm text-slate-500">No equipment yet. Defeat raid bosses or visit the shop.</p>
+                            <p className="text-sm text-slate-400">No equipment yet. Defeat raid bosses or visit the shop.</p>
                         </CardContent>
                     </Card>
                 ) : (
@@ -250,11 +250,11 @@ export default function InventoryPage() {
                                                 <div className="flex items-center gap-1.5">
                                                     <RarityIcon className={`w-4 h-4 shrink-0 ${config.color}`} />
                                                     <h3 className={`font-bold text-sm truncate ${config.color}`}>{eq.name}</h3>
-                                                    <span className={`text-[9px] uppercase tracking-wider font-bold shrink-0 ml-auto ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full`}>
+                                                    <span className={`text-[10px] uppercase tracking-wider font-bold shrink-0 ml-auto ${config.color} ${config.bg} px-1.5 py-0.5 rounded-full`}>
                                                         {eq.rarity}
                                                     </span>
                                                 </div>
-                                                <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">{eq.slot}</p>
+                                                <p className="text-[11px] text-slate-400 uppercase tracking-wider mt-0.5">{eq.slot}</p>
                                                 <p className="text-xs text-slate-400 mt-1">{eq.description}</p>
                                             </div>
                                         </div>

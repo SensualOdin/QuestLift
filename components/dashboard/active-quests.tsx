@@ -83,7 +83,7 @@ export function ActiveQuests() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-slate-500 italic text-center py-4">No active quests found. Go rest at the inn.</p>
+                    <p className="text-sm text-slate-400 italic text-center py-4">No active quests found. Go rest at the inn.</p>
                 </CardContent>
             </GameCard>
         )
@@ -112,14 +112,14 @@ export function ActiveQuests() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {quest.reward && (
-                                            <span className="flex items-center gap-0.5 text-[10px] font-semibold text-amber-400/70">
+                                            <span className="flex items-center gap-0.5 text-[11px] font-semibold text-amber-400/70">
                                                 <Coins className="w-3 h-3" /> {quest.reward}
                                             </span>
                                         )}
                                         {quest.completed ? (
-                                            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Done</span>
+                                            <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Done</span>
                                         ) : (
-                                            <span className="text-xs font-medium text-slate-500">
+                                            <span className="text-xs font-medium text-slate-400">
                                                 {Math.round((quest.progress / quest.total) * 100)}%
                                             </span>
                                         )}
@@ -138,7 +138,7 @@ export function ActiveQuests() {
                                 ) : (
                                     <Progress value={(quest.progress / quest.total) * 100} className="h-1.5 bg-slate-800" />
                                 )}
-                                <div className="flex justify-between text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                                <div className="flex justify-between text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
                                     {resetLabel ? (
                                         <span className="flex items-center gap-1">
                                             <Clock className="w-2.5 h-2.5" />
