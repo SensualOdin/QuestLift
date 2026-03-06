@@ -797,7 +797,7 @@ export async function joinPartyByCode(userId: string, joinCode: string): Promise
 }
 
 /**
- * Disband a party (leader only). Deletes all members then the party itself.
+ * Disband a party (leader only). Deletes the party — members cascade via FK.
  */
 export async function disbandParty(userId: string, partyId: string): Promise<{ success: boolean, error?: string }> {
     const supabase = createClient()
@@ -814,17 +814,7 @@ export async function disbandParty(userId: string, partyId: string): Promise<{ s
         return { success: false, error: 'Only the party leader can disband the party.' }
     }
 
-    // Delete all members first (FK constraint)
-    const { error: membersError } = await supabase
-        .from('party_members')
-        .delete()
-        .eq('party_id', partyId)
-
-    if (membersError) {
-        return { success: false, error: 'Failed to remove party members.' }
-    }
-
-    // Delete the party
+    // Delete the party — party_members cascade via ON DELETE CASCADE
     const { error: partyError } = await supabase
         .from('parties')
         .delete()
