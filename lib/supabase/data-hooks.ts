@@ -797,6 +797,81 @@ export async function joinPartyByCode(userId: string, joinCode: string): Promise
 }
 
 /**
+ * Disband a party (leader only). Deletes all members then the party itself.
+ */
+export async function disbandParty(userId: string, partyId: string): Promise<{ success: boolean, error?: string }> {
+    const supabase = createClient()
+
+    // Verify the user is the leader
+    const { data: member } = await supabase
+        .from('party_members')
+        .select('role')
+        .eq('party_id', partyId)
+        .eq('user_id', userId)
+        .single()
+
+    if (!member || member.role !== 'leader') {
+        return { success: false, error: 'Only the party leader can disband the party.' }
+    }
+
+    // Delete all members first (FK constraint)
+    const { error: membersError } = await supabase
+        .from('party_members')
+        .delete()
+        .eq('party_id', partyId)
+
+    if (membersError) {
+        return { success: false, error: 'Failed to remove party members.' }
+    }
+
+    // Delete the party
+    const { error: partyError } = await supabase
+        .from('parties')
+        .delete()
+        .eq('id', partyId)
+
+    if (partyError) {
+        return { success: false, error: 'Failed to delete party.' }
+    }
+
+    return { success: true }
+}
+
+/**
+ * Leave a party (non-leader members only).
+ */
+export async function leaveParty(userId: string, partyId: string): Promise<{ success: boolean, error?: string }> {
+    const supabase = createClient()
+
+    const { data: member } = await supabase
+        .from('party_members')
+        .select('role')
+        .eq('party_id', partyId)
+        .eq('user_id', userId)
+        .single()
+
+    if (!member) {
+        return { success: false, error: 'You are not in this party.' }
+    }
+
+    if (member.role === 'leader') {
+        return { success: false, error: 'The leader cannot leave. Disband the party instead.' }
+    }
+
+    const { error } = await supabase
+        .from('party_members')
+        .delete()
+        .eq('party_id', partyId)
+        .eq('user_id', userId)
+
+    if (error) {
+        return { success: false, error: 'Failed to leave party.' }
+    }
+
+    return { success: true }
+}
+
+/**
  * Saves a workout and updates all related user stats (XP, level, attributes, raid damage).
  */
 export interface BattleLogEntry {

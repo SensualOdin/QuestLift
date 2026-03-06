@@ -4,15 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Users, Link, Shield, Sword, Wind, Flame, UserPlus, Crown } from "lucide-react"
+import { Users, Link, Shield, Sword, Wind, UserPlus, Crown, Copy, LogOut, Trash2 } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
-import { fetchUserParty, joinPartyByCode } from "@/lib/supabase/data-hooks"
+import { fetchUserParty, joinPartyByCode, disbandParty, leaveParty } from "@/lib/supabase/data-hooks"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createClient } from "@/lib/supabase/client"
 
 export function PartyRoster() {
     const { user } = useUserStore()
     const [inviteCopied, setInviteCopied] = useState(false)
+    const [codeCopied, setCodeCopied] = useState(false)
     const [party, setParty] = useState<any>(null)
     const [roster, setRoster] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -21,6 +22,9 @@ export function PartyRoster() {
     const [isJoining, setIsJoining] = useState(false)
     const [isCreating, setIsCreating] = useState(false)
     const [createError, setCreateError] = useState("")
+    const [isDisbanding, setIsDisbanding] = useState(false)
+    const [isLeaving, setIsLeaving] = useState(false)
+    const [confirmDisband, setConfirmDisband] = useState(false)
 
     const loadParty = async () => {
         if (!user) return
@@ -28,6 +32,9 @@ export function PartyRoster() {
         if (partyData) {
             setParty(Array.isArray(partyData.party) ? partyData.party[0] : partyData.party)
             setRoster(partyData.roster)
+        } else {
+            setParty(null)
+            setRoster([])
         }
         setLoading(false)
     }
@@ -41,6 +48,14 @@ export function PartyRoster() {
             navigator.clipboard.writeText(`${window.location.origin}/invite/${party.join_code}`)
             setInviteCopied(true)
             setTimeout(() => setInviteCopied(false), 2000)
+        }
+    }
+
+    const handleCopyCode = () => {
+        if (party?.join_code) {
+            navigator.clipboard.writeText(party.join_code)
+            setCodeCopied(true)
+            setTimeout(() => setCodeCopied(false), 2000)
         }
     }
 
@@ -92,6 +107,36 @@ export function PartyRoster() {
         }
         setIsJoining(false)
     }
+
+    const handleDisband = async () => {
+        if (!user || !party) return
+        if (!confirmDisband) {
+            setConfirmDisband(true)
+            setTimeout(() => setConfirmDisband(false), 4000)
+            return
+        }
+        setIsDisbanding(true)
+        const result = await disbandParty(user.id, party.id)
+        if (result.success) {
+            setParty(null)
+            setRoster([])
+            setConfirmDisband(false)
+        }
+        setIsDisbanding(false)
+    }
+
+    const handleLeave = async () => {
+        if (!user || !party) return
+        setIsLeaving(true)
+        const result = await leaveParty(user.id, party.id)
+        if (result.success) {
+            setParty(null)
+            setRoster([])
+        }
+        setIsLeaving(false)
+    }
+
+    const isLeader = roster.find(m => m.user_id === user?.id)?.role === 'leader'
 
     const getIcon = (className: string) => {
         if (!className) return Sword
@@ -159,6 +204,32 @@ export function PartyRoster() {
 
             <CardContent className="pt-6 space-y-6">
 
+                {/* Join Code Display */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-950/50 border border-slate-800/60">
+                    <div className="flex-1">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-1">Join Code</p>
+                        <p className="text-lg font-mono font-bold text-indigo-400 tracking-widest">{party.join_code}</p>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopyCode}
+                        className={codeCopied ? "text-emerald-400" : "text-slate-400 hover:text-white"}
+                    >
+                        <Copy className="w-4 h-4 mr-1.5" />
+                        {codeCopied ? "Copied!" : "Code"}
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopyInvite}
+                        className={inviteCopied ? "text-emerald-400" : "text-slate-400 hover:text-white"}
+                    >
+                        <Link className="w-4 h-4 mr-1.5" />
+                        {inviteCopied ? "Copied!" : "Link"}
+                    </Button>
+                </div>
+
                 {/* Members List */}
                 <div className="space-y-3">
                     {roster.map(member => {
@@ -166,7 +237,7 @@ export function PartyRoster() {
                         if (!mUser) return null
 
                         const Icon = getIcon(mUser.class_name)
-                        const isLeader = member.role === 'leader'
+                        const memberIsLeader = member.role === 'leader'
                         const name = user?.id === member.user_id ? `${mUser.display_name} (You)` : mUser.display_name
 
                         return (
@@ -185,7 +256,7 @@ export function PartyRoster() {
                                     <div>
                                         <h4 className="font-semibold text-slate-200 flex items-center gap-1.5">
                                             {name}
-                                            {isLeader && <Crown className="w-3.5 h-3.5 text-yellow-500" />}
+                                            {memberIsLeader && <Crown className="w-3.5 h-3.5 text-yellow-500" />}
                                         </h4>
                                         <p className={`text-xs font-medium flex items-center gap-1 text-slate-400`}>
                                             <Icon className="w-3 h-3" /> {mUser.class_name || 'Novice'}
@@ -197,24 +268,29 @@ export function PartyRoster() {
                     })}
                 </div>
 
-                {/* Invite Generator */}
-                <div className="pt-6 border-t border-slate-800/60 space-y-3">
-                    <h4 className="text-sm font-semibold text-slate-300">Recruit New Members</h4>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            readOnly
-                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/invite/${party.join_code || 'ERROR'}`}
-                            className="bg-slate-950 border-slate-800 text-slate-400 font-mono text-sm"
-                        />
+                {/* Party Actions */}
+                <div className="pt-4 border-t border-slate-800/60">
+                    {isLeader ? (
                         <Button
-                            variant="secondary"
-                            onClick={handleCopyInvite}
-                            className={`${inviteCopied ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' : 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30'}`}
+                            variant="ghost"
+                            onClick={handleDisband}
+                            disabled={isDisbanding}
+                            className={`w-full ${confirmDisband ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'text-slate-500 hover:text-red-400 hover:bg-red-500/10'}`}
                         >
-                            <Link className="w-4 h-4 mr-2" />
-                            {inviteCopied ? 'Copied!' : 'Copy'}
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            {isDisbanding ? "Disbanding..." : confirmDisband ? "Are you sure? Click again to confirm" : "Disband Party"}
                         </Button>
-                    </div>
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            onClick={handleLeave}
+                            disabled={isLeaving}
+                            className="w-full text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+                        >
+                            <LogOut className="w-4 h-4 mr-2" />
+                            {isLeaving ? "Leaving..." : "Leave Party"}
+                        </Button>
+                    )}
                 </div>
             </CardContent>
         </Card>
