@@ -38,7 +38,7 @@ export function PartyRoster() {
 
     const handleCopyInvite = () => {
         if (party?.join_code) {
-            navigator.clipboard.writeText(`questlift.app/invite/${party.join_code}`)
+            navigator.clipboard.writeText(`${window.location.origin}/invite/${party.join_code}`)
             setInviteCopied(true)
             setTimeout(() => setInviteCopied(false), 2000)
         }
@@ -203,7 +203,7 @@ export function PartyRoster() {
                     <div className="flex items-center gap-2">
                         <Input
                             readOnly
-                            value={`questlift.app/invite/${party.join_code || 'ERROR'}`}
+                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/invite/${party.join_code || 'ERROR'}`}
                             className="bg-slate-950 border-slate-800 text-slate-400 font-mono text-sm"
                         />
                         <Button

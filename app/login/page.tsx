@@ -2,16 +2,19 @@
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Sword } from 'lucide-react'
 
-export default function LoginPage() {
+function LoginContent() {
     const supabase = createClient()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [isClient, setIsClient] = useState(false)
     const [origin, setOrigin] = useState('')
+
+    const nextPath = searchParams.get('next') || '/dashboard'
 
     useEffect(() => {
         setIsClient(true)
@@ -20,7 +23,7 @@ export default function LoginPage() {
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession()
             if (session) {
-                router.push('/dashboard')
+                router.push(nextPath)
             }
         }
 
@@ -30,7 +33,7 @@ export default function LoginPage() {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN') {
-                router.push('/dashboard')
+                router.push(nextPath)
             }
         })
 
@@ -86,9 +89,17 @@ export default function LoginPage() {
                     }}
                     theme="dark"
                     providers={['google']}
-                    redirectTo={`${origin}/auth/callback`}
+                    redirectTo={`${origin}/auth/callback${nextPath !== '/dashboard' ? `?next=${encodeURIComponent(nextPath)}` : ''}`}
                 />
             </motion.div>
         </div>
+    )
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense>
+            <LoginContent />
+        </Suspense>
     )
 }
