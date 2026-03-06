@@ -392,7 +392,7 @@ export async function fetchActiveQuests(userId: string): Promise<Quest[]> {
             .select('id, boss_name, boss_max_hp')
             .eq('party_id', memberData.party_id)
             .eq('status', 'active')
-            .single()
+            .maybeSingle()
 
         if (raid) {
             const { data: damageData } = await supabase
@@ -546,7 +546,7 @@ export async function fetchActiveRaid(partyId: string) {
         `)
         .eq('party_id', partyId)
         .eq('status', 'active')
-        .single()
+        .maybeSingle()
 
     if (data) return data
 
@@ -558,7 +558,7 @@ export async function fetchActiveRaid(partyId: string) {
         .eq('party_id', partyId)
         .order('end_time', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
 
     let shouldSpawn = false
 
@@ -608,7 +608,7 @@ export async function fetchExercisePR(userId: string, exerciseId: string): Promi
         .eq('exercise_id', exerciseId)
         .order('weight', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
 
     if (error || !data) return 0
     return data.weight || 0
@@ -676,7 +676,7 @@ export async function fetchRoastReport(partyId: string) {
         .eq('party_id', partyId)
         .order('week_end', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
 
     if (error || !data) return null
     return data
