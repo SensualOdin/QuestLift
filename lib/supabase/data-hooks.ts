@@ -384,7 +384,7 @@ export async function fetchActiveQuests(userId: string): Promise<Quest[]> {
         .from('party_members')
         .select('party_id')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
 
     if (memberData) {
         const { data: raid } = await supabase
@@ -436,7 +436,7 @@ export async function fetchUserParty(userId: string) {
         .from('party_members')
         .select('party_id, parties(*)')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
 
     if (memberError || !memberData || !memberData.parties) return null
 
@@ -757,7 +757,7 @@ export async function joinPartyByCode(userId: string, joinCode: string): Promise
         .from('party_members')
         .select('party_id')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
 
     if (existing) {
         return { success: false, error: 'You are already in a party. Leave your current party first.' }
@@ -1097,7 +1097,7 @@ export async function saveWorkoutSession(
         .from('party_members')
         .select('party_id')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
 
     if (memberData) {
         const { data: activeRaid } = await supabase
