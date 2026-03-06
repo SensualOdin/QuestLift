@@ -768,7 +768,7 @@ export async function joinPartyByCode(userId: string, joinCode: string): Promise
     const { data: party, error: partyError } = await supabase
         .from('parties')
         .select('id')
-        .eq('join_code', joinCode.trim().toUpperCase())
+        .ilike('join_code', joinCode.trim())
         .single()
 
     if (partyError || !party) {
