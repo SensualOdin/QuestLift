@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Users, Link, Shield, Sword, Wind, UserPlus, Crown, Copy, LogOut, Trash2 } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { fetchUserParty, joinPartyByCode, disbandParty, leaveParty } from "@/lib/supabase/data-hooks"
+import { useRealtimePartyRoster } from "@/lib/supabase/realtime-hooks"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createClient } from "@/lib/supabase/client"
 
@@ -42,6 +43,9 @@ export function PartyRoster() {
     useEffect(() => {
         loadParty()
     }, [user])
+
+    // Live updates when members join or leave
+    useRealtimePartyRoster(party?.id, loadParty)
 
     const handleCopyInvite = () => {
         if (party?.join_code) {

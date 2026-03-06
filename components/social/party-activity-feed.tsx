@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dumbbell, Trophy, Zap, Swords, Flame } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { fetchUserParty } from "@/lib/supabase/data-hooks"
+import { useRealtimePartyActivity } from "@/lib/supabase/realtime-hooks"
 import { createClient } from "@/lib/supabase/client"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatDistanceToNow, parseISO } from "date-fns"
@@ -22,96 +23,103 @@ export function PartyActivityFeed() {
     const { user } = useUserStore()
     const [activities, setActivities] = useState<ActivityItem[]>([])
     const [loading, setLoading] = useState(true)
+    const [partyId, setPartyId] = useState<string | null>(null)
 
-    useEffect(() => {
-        const loadFeed = async () => {
-            if (!user) return
+    const loadFeed = async () => {
+        if (!user) return
 
-            const partyData = await fetchUserParty(user.id)
-            if (!partyData) {
-                setLoading(false)
-                return
-            }
+        const partyData = await fetchUserParty(user.id)
+        if (!partyData) {
+            setLoading(false)
+            return
+        }
 
-            const partyId = (Array.isArray(partyData.party) ? partyData.party[0] : partyData.party)?.id
-            if (!partyId) {
-                setLoading(false)
-                return
-            }
+        const pId = (Array.isArray(partyData.party) ? partyData.party[0] : partyData.party)?.id
+        if (!pId) {
+            setLoading(false)
+            return
+        }
+        setPartyId(pId)
+        const partyId = pId
 
-            const supabase = createClient()
+        const supabase = createClient()
 
-            // Get all party member IDs
-            const { data: members } = await supabase
-                .from('party_members')
-                .select('user_id, users(display_name)')
-                .eq('party_id', partyId)
+        // Get all party member IDs
+        const { data: members } = await supabase
+            .from('party_members')
+            .select('user_id, users(display_name)')
+            .eq('party_id', partyId)
 
-            if (!members || members.length === 0) {
-                setLoading(false)
-                return
-            }
+        if (!members || members.length === 0) {
+            setLoading(false)
+            return
+        }
 
-            const memberIds = members.map(m => m.user_id)
-            const nameMap = new Map<string, string>()
-            for (const m of members) {
-                const u = Array.isArray(m.users) ? m.users[0] : m.users
-                nameMap.set(m.user_id, u?.display_name || 'Unknown')
-            }
+        const memberIds = members.map(m => m.user_id)
+        const nameMap = new Map<string, string>()
+        for (const m of members) {
+            const u = Array.isArray(m.users) ? m.users[0] : m.users
+            nameMap.set(m.user_id, u?.display_name || 'Unknown')
+        }
 
-            // Fetch recent workouts from all party members
-            const { data: workouts } = await supabase
-                .from('workouts')
-                .select('id, user_id, total_volume, xp_earned, start_time')
-                .in('user_id', memberIds)
-                .order('start_time', { ascending: false })
-                .limit(15)
+        // Fetch recent workouts from all party members
+        const { data: workouts } = await supabase
+            .from('workouts')
+            .select('id, user_id, total_volume, xp_earned, start_time')
+            .in('user_id', memberIds)
+            .order('start_time', { ascending: false })
+            .limit(15)
 
-            const feed: ActivityItem[] = []
+        const feed: ActivityItem[] = []
 
-            for (const w of (workouts || [])) {
-                const name = nameMap.get(w.user_id) || 'Unknown'
-                const isYou = w.user_id === user.id
+        for (const w of (workouts || [])) {
+            const name = nameMap.get(w.user_id) || 'Unknown'
+            const isYou = w.user_id === user.id
 
-                feed.push({
-                    id: `workout-${w.id}`,
-                    type: 'workout',
-                    userName: isYou ? 'You' : name,
-                    message: `completed a workout`,
-                    detail: `${((w.total_volume || 0) / 1000).toFixed(1)}k lbs lifted | +${w.xp_earned || 0} XP`,
-                    timestamp: w.start_time || new Date().toISOString()
-                })
+            feed.push({
+                id: `workout-${w.id}`,
+                type: 'workout',
+                userName: isYou ? 'You' : name,
+                message: `completed a workout`,
+                detail: `${((w.total_volume || 0) / 1000).toFixed(1)}k lbs lifted | +${w.xp_earned || 0} XP`,
+                timestamp: w.start_time || new Date().toISOString()
+            })
 
-                // Check for PRs in this workout
-                const { data: prSets } = await supabase
-                    .from('workout_sets')
-                    .select('weight, exercises(name)')
-                    .eq('workout_id', w.id)
-                    .eq('is_pr', true)
+            // Check for PRs in this workout
+            const { data: prSets } = await supabase
+                .from('workout_sets')
+                .select('weight, exercises(name)')
+                .eq('workout_id', w.id)
+                .eq('is_pr', true)
 
-                if (prSets && prSets.length > 0) {
-                    for (const pr of prSets) {
-                        const exName = (pr.exercises as any)?.name || 'an exercise'
-                        feed.push({
-                            id: `pr-${w.id}-${exName}`,
-                            type: 'pr',
-                            userName: isYou ? 'You' : name,
-                            message: `set a new PR on ${exName}`,
-                            detail: `${pr.weight} lbs`,
-                            timestamp: w.start_time || new Date().toISOString()
-                        })
-                    }
+            if (prSets && prSets.length > 0) {
+                for (const pr of prSets) {
+                    const exName = (pr.exercises as any)?.name || 'an exercise'
+                    feed.push({
+                        id: `pr-${w.id}-${exName}`,
+                        type: 'pr',
+                        userName: isYou ? 'You' : name,
+                        message: `set a new PR on ${exName}`,
+                        detail: `${pr.weight} lbs`,
+                        timestamp: w.start_time || new Date().toISOString()
+                    })
                 }
             }
-
-            // Sort by timestamp descending
-            feed.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-
-            setActivities(feed.slice(0, 20))
-            setLoading(false)
         }
+
+        // Sort by timestamp descending
+        feed.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+        setActivities(feed.slice(0, 20))
+        setLoading(false)
+    }
+
+    useEffect(() => {
         loadFeed()
     }, [user])
+
+    // Live updates when party members log workouts
+    useRealtimePartyActivity(partyId, loadFeed)
 
     const getActivityIcon = (type: string) => {
         switch (type) {

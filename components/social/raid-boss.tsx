@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress"
 import { Swords, Skull, Shield } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { fetchUserParty, fetchActiveRaid } from "@/lib/supabase/data-hooks"
+import { useRealtimeRaidBoss } from "@/lib/supabase/realtime-hooks"
 import { Skeleton } from "@/components/ui/skeleton"
 import { differenceInDays, differenceInHours, parseISO } from "date-fns"
 
@@ -13,22 +14,26 @@ export function RaidBoss() {
     const [raid, setRaid] = useState<any>(null)
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        const loadRaid = async () => {
-            if (!user) return
-            const partyData = await fetchUserParty(user.id)
+    const loadRaid = async () => {
+        if (!user) return
+        const partyData = await fetchUserParty(user.id)
 
-            if (partyData && partyData.party) {
-                const party = Array.isArray(partyData.party) ? partyData.party[0] : partyData.party
-                if (party) {
-                    const activeRaid = await fetchActiveRaid(party.id)
-                    setRaid(activeRaid)
-                }
+        if (partyData && partyData.party) {
+            const party = Array.isArray(partyData.party) ? partyData.party[0] : partyData.party
+            if (party) {
+                const activeRaid = await fetchActiveRaid(party.id)
+                setRaid(activeRaid)
             }
-            setLoading(false)
         }
+        setLoading(false)
+    }
+
+    useEffect(() => {
         loadRaid()
     }, [user])
+
+    // Live updates when party members deal damage
+    useRealtimeRaidBoss(raid?.id, loadRaid)
 
     if (loading) {
         return <Skeleton className="h-96 w-full bg-slate-800/50 rounded-xl" />

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Sword, Shield, Wind, Flame, Sparkles } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
+import { useRealtimeUserProfile } from "@/lib/supabase/realtime-hooks"
 import { createClient } from "@/lib/supabase/client"
 import { getXPForNextLevel } from "@/lib/xp-engine"
 import { ClassSelectionModal } from "@/components/dashboard/class-selection-modal"
@@ -112,6 +113,9 @@ export function UserProfile() {
         }
         initProfile()
     }, [fetchProfile])
+
+    // Live updates when XP, level, or stats change
+    useRealtimeUserProfile(user?.id, refreshProfile)
 
     // Show class selection modal when user reaches level 6+ without a class
     useEffect(() => {
