@@ -436,6 +436,7 @@ export async function fetchUserParty(userId: string) {
         .from('party_members')
         .select('party_id, parties(*)')
         .eq('user_id', userId)
+        .limit(1)
         .maybeSingle()
 
     if (memberError || !memberData || !memberData.parties) return null

@@ -65,6 +65,21 @@ export function PartyRoster() {
         setCreateError("")
 
         const supabase = createClient()
+
+        // Check if already in a party
+        const { data: existing } = await supabase
+            .from('party_members')
+            .select('party_id')
+            .eq('user_id', user.id)
+            .limit(1)
+            .maybeSingle()
+
+        if (existing) {
+            await loadParty()
+            setIsCreating(false)
+            return
+        }
+
         const partyId = crypto.randomUUID()
         const code = `p-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
