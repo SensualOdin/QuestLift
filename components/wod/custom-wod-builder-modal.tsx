@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2, Flame, Loader2 } from "lucide-react"
-import { createCustomWod, type WodTemplate, type WodMovement } from "@/lib/supabase/data-hooks"
+import { createCustomWod, fetchAllExercises, type WodTemplate, type WodMovement, type Exercise } from "@/lib/supabase/data-hooks"
 import { useUserStore } from "@/lib/store/user-store"
 
 const WOD_TYPES = [
@@ -36,6 +36,94 @@ const emptyMovement = (): MovementEntry => ({
     notes: '',
 })
 
+function ExerciseAutocomplete({
+    exercises,
+    value,
+    onChange,
+}: {
+    exercises: Exercise[]
+    value: string
+    onChange: (name: string) => void
+}) {
+    const [showDropdown, setShowDropdown] = useState(false)
+    const [highlightIndex, setHighlightIndex] = useState(0)
+    const blurTimeout = useRef<ReturnType<typeof setTimeout>>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    const filtered = useMemo(() => {
+        if (!value.trim()) return []
+        return exercises
+            .filter(ex => ex.name.toLowerCase().includes(value.toLowerCase()))
+            .slice(0, 6)
+    }, [exercises, value])
+
+    function handleSelect(name: string) {
+        onChange(name)
+        setShowDropdown(false)
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent) {
+        if (!showDropdown || filtered.length === 0) return
+        if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            setHighlightIndex(i => Math.min(i + 1, filtered.length - 1))
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            setHighlightIndex(i => Math.max(i - 1, 0))
+        } else if (e.key === 'Enter') {
+            e.preventDefault()
+            handleSelect(filtered[highlightIndex].name)
+        } else if (e.key === 'Escape') {
+            setShowDropdown(false)
+        }
+    }
+
+    return (
+        <div className="relative flex-1" ref={containerRef}>
+            <Input
+                value={value}
+                onChange={(e) => {
+                    onChange(e.target.value)
+                    setShowDropdown(true)
+                    setHighlightIndex(0)
+                }}
+                onFocus={() => { if (value.trim()) setShowDropdown(true) }}
+                onBlur={() => {
+                    blurTimeout.current = setTimeout(() => setShowDropdown(false), 150)
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Exercise name"
+                className="bg-slate-800/40 border-slate-700 text-white placeholder:text-slate-500 text-sm h-9 focus-visible:ring-amber-500/50"
+            />
+            {showDropdown && filtered.length > 0 && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden">
+                    {filtered.map((ex, i) => (
+                        <button
+                            key={ex.id}
+                            type="button"
+                            onMouseDown={(e) => {
+                                e.preventDefault()
+                                if (blurTimeout.current) clearTimeout(blurTimeout.current)
+                                handleSelect(ex.name)
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
+                                i === highlightIndex
+                                    ? 'bg-amber-500/15 text-amber-300'
+                                    : 'text-slate-200 hover:bg-slate-800'
+                            }`}
+                        >
+                            <span>{ex.name}</span>
+                            <span className="text-[10px] text-slate-500 ml-2 shrink-0">
+                                {ex.category}{ex.equipment ? ` · ${ex.equipment}` : ''}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
 interface CustomWodBuilderModalProps {
     isOpen: boolean
     onClose: () => void
@@ -44,6 +132,14 @@ interface CustomWodBuilderModalProps {
 
 export function CustomWodBuilderModal({ isOpen, onClose, onCreated }: CustomWodBuilderModalProps) {
     const { user } = useUserStore()
+    const [exercises, setExercises] = useState<Exercise[]>([])
+
+    useEffect(() => {
+        if (isOpen && exercises.length === 0) {
+            fetchAllExercises().then(setExercises)
+        }
+    }, [isOpen])
+
     const [name, setName] = useState('')
     const [wodType, setWodType] = useState<WodType>('amrap')
     const [timeCap, setTimeCap] = useState('')
@@ -235,11 +331,10 @@ export function CustomWodBuilderModal({ isOpen, onClose, onCreated }: CustomWodB
                                 <div key={i} className="bg-slate-900/40 border border-slate-800/60 rounded-xl p-3 space-y-2">
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-bold text-slate-500 w-5 shrink-0">{i + 1}.</span>
-                                        <Input
+                                        <ExerciseAutocomplete
+                                            exercises={exercises}
                                             value={m.exercise_name}
-                                            onChange={(e) => updateMovement(i, 'exercise_name', e.target.value)}
-                                            placeholder="Exercise name"
-                                            className="bg-slate-800/40 border-slate-700 text-white placeholder:text-slate-500 text-sm h-9 focus-visible:ring-amber-500/50"
+                                            onChange={(val) => updateMovement(i, 'exercise_name', val)}
                                         />
                                         {movements.length > 1 && (
                                             <button
