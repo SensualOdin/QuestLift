@@ -1539,3 +1539,94 @@ export async function allocateSkillPoint(userId: string, nodeId: string, classNa
     if (error) return { success: false, error: 'Already allocated or error' }
     return { success: true }
 }
+
+// --- WOD Templates ---
+
+export type WodMovement = {
+    exercise_name: string
+    reps: number
+    weight_lbs: number | null
+    notes: string
+}
+
+export type WodTemplate = {
+    id: string
+    name: string
+    wod_type: 'amrap' | 'emom' | 'for_time' | 'chipper' | 'tabata'
+    time_cap_seconds: number | null
+    rounds: number | null
+    is_benchmark: boolean
+    created_by: string | null
+    movements: WodMovement[]
+    created_at: string
+}
+
+export async function fetchBenchmarkWods(): Promise<WodTemplate[]> {
+    const supabase = createClient()
+    const { data, error } = await supabase
+        .from('wod_templates')
+        .select('*')
+        .eq('is_benchmark', true)
+        .order('name', { ascending: true })
+
+    if (error) {
+        console.error('Error fetching benchmark WODs:', error)
+        return []
+    }
+    return (data || []) as WodTemplate[]
+}
+
+export async function fetchUserWods(userId: string): Promise<WodTemplate[]> {
+    const supabase = createClient()
+    const { data, error } = await supabase
+        .from('wod_templates')
+        .select('*')
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching user WODs:', error)
+        return []
+    }
+    return (data || []) as WodTemplate[]
+}
+
+export async function createCustomWod(wod: {
+    name: string
+    wod_type: string
+    time_cap_seconds: number | null
+    rounds: number | null
+    created_by: string
+    movements: WodMovement[]
+}): Promise<WodTemplate | null> {
+    const supabase = createClient()
+    const { data, error } = await supabase
+        .from('wod_templates')
+        .insert({
+            ...wod,
+            is_benchmark: false,
+            movements: wod.movements as any
+        })
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error creating custom WOD:', error)
+        return null
+    }
+    return data as WodTemplate
+}
+
+export async function deleteCustomWod(wodId: string): Promise<boolean> {
+    const supabase = createClient()
+    const { error } = await supabase
+        .from('wod_templates')
+        .delete()
+        .eq('id', wodId)
+
+    if (error) {
+        console.error('Error deleting WOD:', error)
+        return false
+    }
+    return true
+}
