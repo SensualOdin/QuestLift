@@ -4,10 +4,10 @@ import { useState, useMemo } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Dumbbell, Activity, Plus } from "lucide-react"
+import { Search, Dumbbell, Activity, Plus, Flame } from "lucide-react"
 import type { Exercise } from "@/lib/supabase/data-hooks"
 
-const CATEGORIES = ["All", "Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Cardio"]
+const CATEGORIES = ["All", "Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Olympic", "CrossFit", "Gymnastics", "Cardio", "Mobility", "Recovery"]
 
 interface ExercisePickerModalProps {
     isOpen: boolean
@@ -106,8 +106,17 @@ export function ExercisePickerModal({ isOpen, onClose, onSelect, exercises }: Ex
                                             className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-900 transition-colors group text-left"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`p-1.5 rounded-lg ${exercise.exercise_type === 'Strength' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                                                    {exercise.exercise_type === 'Strength'
+                                                <div className={`p-1.5 rounded-lg ${
+                                                    exercise.category === 'Olympic' ? 'bg-amber-500/10 text-amber-400' :
+                                                    exercise.category === 'CrossFit' ? 'bg-orange-500/10 text-orange-400' :
+                                                    exercise.category === 'Gymnastics' ? 'bg-rose-500/10 text-rose-400' :
+                                                    exercise.exercise_type === 'Mobility' || exercise.exercise_type === 'Recovery' ? 'bg-teal-500/10 text-teal-400' :
+                                                    exercise.exercise_type === 'Strength' ? 'bg-indigo-500/10 text-indigo-400' :
+                                                    'bg-emerald-500/10 text-emerald-400'
+                                                }`}>
+                                                    {exercise.category === 'Olympic' || exercise.category === 'CrossFit'
+                                                        ? <Flame className="w-4 h-4" />
+                                                        : exercise.exercise_type === 'Strength'
                                                         ? <Dumbbell className="w-4 h-4" />
                                                         : <Activity className="w-4 h-4" />}
                                                 </div>
