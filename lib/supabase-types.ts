@@ -103,6 +103,7 @@ export type Database = {
           exercise_type: string
           id: string
           name: string
+          tracking_mode: string
         }
         Insert: {
           category: string
@@ -111,6 +112,7 @@ export type Database = {
           exercise_type: string
           id?: string
           name: string
+          tracking_mode?: string
         }
         Update: {
           category?: string
@@ -119,6 +121,7 @@ export type Database = {
           exercise_type?: string
           id?: string
           name?: string
+          tracking_mode?: string
         }
         Relationships: []
       }
@@ -735,6 +738,50 @@ export type Database = {
         }
         Relationships: []
       }
+      wod_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_benchmark: boolean | null
+          movements: Json
+          name: string
+          rounds: number | null
+          time_cap_seconds: number | null
+          wod_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_benchmark?: boolean | null
+          movements: Json
+          name: string
+          rounds?: number | null
+          time_cap_seconds?: number | null
+          wod_type: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_benchmark?: boolean | null
+          movements?: Json
+          name?: string
+          rounds?: number | null
+          time_cap_seconds?: number | null
+          wod_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wod_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workout_sets: {
         Row: {
           created_at: string
@@ -906,10 +953,10 @@ export type Database = {
         Args: { user_id: string; xp_amount: number }
         Returns: undefined
       }
-      is_party_member: {
-        Args: { p_party_id: string; p_user_id: string }
-        Returns: boolean
-      }
+      is_party_leader: { Args: { p_party_id: string }; Returns: boolean }
+      is_party_member:
+        | { Args: { p_party_id: string }; Returns: boolean }
+        | { Args: { p_party_id: string; p_user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

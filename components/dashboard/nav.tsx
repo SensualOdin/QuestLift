@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Dumbbell, Users, ShoppingBag, Package, GitBranch, Swords } from "lucide-react"
+import { Home, Dumbbell, Users, ShoppingBag, Package, GitBranch, Swords, Flame } from "lucide-react"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/lib/utils/motion"
 
@@ -13,6 +13,7 @@ export function MainNav() {
     const navItems = [
         { href: "/dashboard", label: "Inn", icon: Home },
         { href: "/dashboard/workout", label: "Workout", icon: Dumbbell },
+        { href: "/dashboard/wod", label: "WOD", icon: Flame },
         { href: "/dashboard/inventory", label: "Gear", icon: Package },
         { href: "/dashboard/skills", label: "Skills", icon: GitBranch },
         { href: "/dashboard/shop", label: "Shop", icon: ShoppingBag },

@@ -974,20 +974,24 @@ export async function saveWorkoutSession(
 
     const xpSets = sets.map(set => {
         const exType = exerciseTypes.get(set.exercise_id) || 'Strength'
-        const isStrength = exType === 'Strength'
 
         // Determine class specialty
         const isSpecialty = determineClassSpecialty(userClassName, exType)
 
-        const data: WorkoutSet = isStrength
-            ? { weight: set.weight || undefined, reps: set.reps || undefined, rpe: set.rpe || undefined }
-            : { durationMinutes: set.reps || undefined, rpe: set.rpe || undefined } // reps stores duration for cardio
+        let type: 'Strength' | 'Cardio' | 'Bodyweight' = 'Cardio'
+        let data: WorkoutSet
 
-        return {
-            type: (isStrength ? 'Strength' : 'Cardio') as 'Strength' | 'Cardio',
-            data,
-            isSpecialty
+        if (exType === 'Bodyweight') {
+            type = 'Bodyweight'
+            data = { reps: set.reps || undefined, rpe: set.rpe || undefined }
+        } else if (exType === 'Strength') {
+            type = 'Strength'
+            data = { weight: set.weight || undefined, reps: set.reps || undefined, rpe: set.rpe || undefined }
+        } else {
+            data = { durationMinutes: set.reps || undefined, rpe: set.rpe || undefined }
         }
+
+        return { type, data, isSpecialty }
     })
 
     let xpEarned = calculateSessionXP(xpSets, consistency)
@@ -1018,6 +1022,8 @@ export async function saveWorkoutSession(
         const exType = exerciseTypes.get(set.exercise_id) || 'Strength'
         if (exType === 'Strength') {
             strVolume += (set.weight || 0) * (set.reps || 0)
+        } else if (exType === 'Bodyweight') {
+            strVolume += (set.reps || 0) * 2 // bodyweight reps contribute to str volume
         } else if (exType === 'Recovery') {
             wisMinutes += (set.reps || 0)
         } else {

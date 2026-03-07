@@ -22,6 +22,20 @@ create table public.exercises (
   category text not null, -- 'Chest', 'Back', 'Legs', etc.
   equipment text, -- 'Barbell', 'Dumbbell', 'Machine', 'Bodyweight'
   exercise_type text not null, -- 'Strength', 'Cardio', 'Mobility'
+  tracking_mode text not null default 'weight_reps', -- 'weight_reps', 'reps_only', 'duration', 'reps_or_duration'
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- WOD Templates (benchmark + custom WODs)
+create table public.wod_templates (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  wod_type text not null, -- 'amrap', 'for_time', 'emom', 'chipper', 'tabata'
+  time_cap_seconds integer,
+  rounds integer,
+  movements jsonb not null default '[]'::jsonb,
+  is_benchmark boolean default false,
+  created_by uuid references public.users on delete set null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
