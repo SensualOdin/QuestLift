@@ -1,6 +1,6 @@
 // lib/xp-engine.ts
 
-export type WorkoutType = 'Strength' | 'Cardio' | 'Mobility' | 'Recovery'
+export type WorkoutType = 'Strength' | 'Cardio' | 'Mobility' | 'Recovery' | 'Bodyweight'
 
 export interface WorkoutSet {
     weight?: number
@@ -72,6 +72,19 @@ export function calculateCardioSetXP(set: WorkoutSet, isClassSpecialty: boolean 
 }
 
 /**
+ * Calculates XP for a bodyweight (reps_only) set.
+ * Flat rate of 2 XP per rep.
+ */
+export function calculateBodyweightSetXP(set: WorkoutSet, isClassSpecialty: boolean = false): number {
+    if (!set.reps) return 0
+    let xp = set.reps * 2
+    if (isClassSpecialty) {
+        xp *= 1.15
+    }
+    return xp
+}
+
+/**
  * Calculates the total XP for an entire workout session, including consistency bonuses.
  */
 export function calculateSessionXP(
@@ -83,6 +96,8 @@ export function calculateSessionXP(
     for (const set of sets) {
         if (set.type === 'Strength') {
             sessionBaseXP += calculateStrengthSetXP(set.data, set.isSpecialty)
+        } else if (set.type === 'Bodyweight') {
+            sessionBaseXP += calculateBodyweightSetXP(set.data, set.isSpecialty)
         } else {
             sessionBaseXP += calculateCardioSetXP(set.data, set.isSpecialty)
         }
