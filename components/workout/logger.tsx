@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Check, Dumbbell, Timer, Plus, Trash2, Activity, Trophy, Info } from "lucide-react"
+import { Check, Dumbbell, Timer, Plus, Trash2, Activity, Trophy, Info, Flame } from "lucide-react"
 import { useUserStore } from "@/lib/store/user-store"
 import { fetchAllExercises, fetchExercisePR, saveWorkoutSession, type Exercise, type WorkoutResult } from "@/lib/supabase/data-hooks"
 import { useRouter } from "next/navigation"
@@ -378,7 +378,10 @@ export function WorkoutLogger() {
         const exerciseTypes = new Map<string, string>()
 
         workoutExercises.forEach(ex => {
-            exerciseTypes.set(ex.exerciseDef.id, ex.exerciseDef.exercise_type || 'Strength')
+            const trackingMode = ex.exerciseDef.tracking_mode || 'weight_reps'
+            const xpType = trackingMode === 'reps_only' ? 'Bodyweight' :
+                (ex.exerciseDef.exercise_type || 'Strength')
+            exerciseTypes.set(ex.exerciseDef.id, xpType)
 
             ex.sets.filter(s => s.completed).forEach(s => {
                 const isStrength = ex.exerciseDef.exercise_type === 'Strength'
@@ -549,7 +552,9 @@ export function WorkoutLogger() {
             {/* Exercise Logger List */}
             <div className="space-y-6">
                 {workoutExercises.map((activeEx, exIndex) => {
-                    const isStrength = activeEx.exerciseDef.exercise_type === "Strength"
+                    const trackingMode = activeEx.exerciseDef.tracking_mode ||
+                        (activeEx.exerciseDef.exercise_type === 'Strength' ? 'weight_reps' : 'duration')
+                    const isStrength = trackingMode === 'weight_reps'
                     const isDumbbell = activeEx.exerciseDef.equipment === 'Dumbbell'
                     const isBarbell = activeEx.exerciseDef.equipment === 'Barbell'
                     // PR display: DB stores total, show per-hand for dumbbell
@@ -560,7 +565,12 @@ export function WorkoutLogger() {
                         <Card key={activeEx.id} className="border-slate-800/60 bg-slate-900/40 backdrop-blur-xl overflow-hidden shadow-lg">
                             <CardHeader className="pb-3 pt-4 px-4 bg-slate-900/80 border-b border-slate-800/60 flex flex-row items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${isStrength ? 'bg-indigo-500/20 text-indigo-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                    <div className={`p-2 rounded-lg ${
+                                        activeEx.exerciseDef.category === 'Olympic' || activeEx.exerciseDef.category === 'CrossFit' ? 'bg-amber-500/20 text-amber-400' :
+                                        activeEx.exerciseDef.category === 'Gymnastics' ? 'bg-rose-500/20 text-rose-400' :
+                                        isStrength || trackingMode === 'reps_only' ? 'bg-indigo-500/20 text-indigo-400' :
+                                        'bg-emerald-500/20 text-emerald-400'
+                                    }`}>
                                         {isStrength ? <Dumbbell className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
                                     </div>
                                     <div>
@@ -582,9 +592,14 @@ export function WorkoutLogger() {
                                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-semibold text-slate-400 px-1 mb-1">
                                     <div className="w-8 text-center hidden sm:block">Set</div>
                                     <div className="hidden sm:block w-20 text-center">Prev</div>
-                                    {isStrength ? (
+                                    {trackingMode === 'weight_reps' ? (
                                         <>
                                             <div className="flex-1 text-center">{isDumbbell ? 'lbs ea.' : 'lbs'}</div>
+                                            <div className="flex-1 text-center">Reps</div>
+                                            <div className="flex-1 text-center flex items-center justify-center gap-1">RPE <RPEInfoPopover /></div>
+                                        </>
+                                    ) : trackingMode === 'reps_only' ? (
+                                        <>
                                             <div className="flex-1 text-center">Reps</div>
                                             <div className="flex-1 text-center flex items-center justify-center gap-1">RPE <RPEInfoPopover /></div>
                                         </>
@@ -616,7 +631,7 @@ export function WorkoutLogger() {
                                             <span className="text-xs text-slate-700">{activeEx.previousBest > 0 ? displayPR : '-'}</span>
                                         </div>
 
-                                        {isStrength ? (
+                                        {trackingMode === 'weight_reps' ? (
                                             <>
                                                 <div className="flex-1">
                                                     <Input inputMode="decimal" type="number" placeholder="0" value={set.weight} onChange={e => updateSet(activeEx.id, set.id, 'weight', e.target.value)} disabled={set.completed} className={`h-11 text-base text-center bg-slate-900 border-slate-800 px-1 ${set.isPR ? 'text-yellow-400 font-bold' : ''}`} />
@@ -625,6 +640,15 @@ export function WorkoutLogger() {
                                                         return plates ? <p className="text-xs text-slate-400 text-center mt-0.5">{plates}</p> : null
                                                     })()}
                                                 </div>
+                                                <div className="flex-1">
+                                                    <Input inputMode="numeric" type="number" placeholder="0" value={set.reps} onChange={e => updateSet(activeEx.id, set.id, 'reps', e.target.value)} disabled={set.completed} className="h-11 text-base text-center bg-slate-900 border-slate-800 px-1" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <Input inputMode="decimal" type="number" placeholder="RPE" value={set.rpe} onChange={e => updateSet(activeEx.id, set.id, 'rpe', e.target.value)} disabled={set.completed} className="h-11 text-base text-center bg-slate-900 border-slate-800 px-1" />
+                                                </div>
+                                            </>
+                                        ) : trackingMode === 'reps_only' ? (
+                                            <>
                                                 <div className="flex-1">
                                                     <Input inputMode="numeric" type="number" placeholder="0" value={set.reps} onChange={e => updateSet(activeEx.id, set.id, 'reps', e.target.value)} disabled={set.completed} className="h-11 text-base text-center bg-slate-900 border-slate-800 px-1" />
                                                 </div>
