@@ -35,9 +35,10 @@ function getWodDescription(wod: WodTemplate): string {
 interface WodPickerProps {
     onSelectWod: (wod: WodTemplate) => void
     onCreateCustom: () => void
+    refreshKey?: number
 }
 
-export function WodPicker({ onSelectWod, onCreateCustom }: WodPickerProps) {
+export function WodPicker({ onSelectWod, onCreateCustom, refreshKey = 0 }: WodPickerProps) {
     const { user } = useUserStore()
     const [benchmarks, setBenchmarks] = useState<WodTemplate[]>([])
     const [customWods, setCustomWods] = useState<WodTemplate[]>([])
@@ -54,7 +55,7 @@ export function WodPicker({ onSelectWod, onCreateCustom }: WodPickerProps) {
             setLoading(false)
         }
         load()
-    }, [user])
+    }, [user, refreshKey])
 
     if (loading) {
         return (

@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Flame } from "lucide-react"
 import { WodPicker } from "@/components/wod/wod-picker"
 import { ActiveWod, type WodResult } from "@/components/wod/active-wod"
 import { WodResultsModal } from "@/components/wod/wod-results-modal"
+import { CustomWodBuilderModal } from "@/components/wod/custom-wod-builder-modal"
 import { useUserStore } from "@/lib/store/user-store"
 import type { WodTemplate } from "@/lib/supabase/data-hooks"
 import { useRouter } from "next/navigation"
@@ -18,6 +19,8 @@ export default function WodPage() {
     const [selectedWod, setSelectedWod] = useState<WodTemplate | null>(null)
     const [wodResult, setWodResult] = useState<WodResult | null>(null)
     const [xpEarned, setXpEarned] = useState(0)
+    const [showBuilder, setShowBuilder] = useState(false)
+    const [refreshKey, setRefreshKey] = useState(0)
 
     const handleSelectWod = (wod: WodTemplate) => {
         setSelectedWod(wod)
@@ -53,9 +56,16 @@ export default function WodPage() {
     }
 
     const handleCreateCustom = () => {
-        // TODO: custom WOD builder modal
-        alert('Custom WOD builder coming soon!')
+        setShowBuilder(true)
     }
+
+    const handleWodCreated = useCallback((wod: WodTemplate, startImmediately: boolean) => {
+        setShowBuilder(false)
+        setRefreshKey(k => k + 1)
+        if (startImmediately) {
+            handleSelectWod(wod)
+        }
+    }, [])
 
     return (
         <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 md:px-8">
@@ -70,7 +80,7 @@ export default function WodPage() {
                             <p className="text-sm text-slate-400">Workout of the Day</p>
                         </div>
                     </div>
-                    <WodPicker onSelectWod={handleSelectWod} onCreateCustom={handleCreateCustom} />
+                    <WodPicker onSelectWod={handleSelectWod} onCreateCustom={handleCreateCustom} refreshKey={refreshKey} />
                 </div>
             )}
 
@@ -94,6 +104,11 @@ export default function WodPage() {
                     xpEarned={xpEarned}
                 />
             )}
+            <CustomWodBuilderModal
+                isOpen={showBuilder}
+                onClose={() => setShowBuilder(false)}
+                onCreated={handleWodCreated}
+            />
         </div>
     )
 }
